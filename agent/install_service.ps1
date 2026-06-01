@@ -22,10 +22,30 @@ $ServiceDescription = "Autonomous Vulnerability Remediation & Endpoint Orchestra
 $InstallPath = "C:\Program Files\AutoPatchAI"
 $ExecutablePath = "$InstallPath\autopatch-ai-agent.exe"
 
+Write-Host "=========================================================="
+Write-Host "🔥 AutoPatch AI Agent - Production Installer Wizard"
+Write-Host "=========================================================="
+
 # 1. Verify Executable Exists
 if (-not (Test-Path -Path $ExecutablePath)) {
-    Write-Error "Could not find $ExecutablePath. Please ensure the agent has been compiled via PyInstaller and placed in the correct directory."
-    exit 1
+    Write-Warning "Executable not found at $ExecutablePath."
+    Write-Host "Attempting to compile source via PyInstaller..."
+    
+    # Check for pyinstaller
+    if (Get-Command pyinstaller -ErrorAction SilentlyContinue) {
+        pyinstaller --onefile --noconsole main.py -n autopatch-ai-agent
+        if (Test-Path "dist\autopatch-ai-agent.exe") {
+            New-Item -ItemType Directory -Force -Path $InstallPath | Out-Null
+            Copy-Item "dist\autopatch-ai-agent.exe" -Destination $ExecutablePath -Force
+            Write-Host "Compiled and staged successfully."
+        } else {
+            Write-Error "Compilation failed."
+            exit 1
+        }
+    } else {
+         Write-Error "PyInstaller not found. Please install Python and run 'pip install pyinstaller' or place the precompiled binary manually."
+         exit 1
+    }
 }
 
 # 2. Stop and remove existing service if it exists

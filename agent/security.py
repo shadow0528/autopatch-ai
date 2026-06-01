@@ -23,17 +23,30 @@ TRUSTED_SCRIPT_REGISTRY = {
 import os
 import hashlib
 
+AGENT_AUTH_TOKEN = os.environ.get("AGENT_AUTH_TOKEN", "mock-secure-token-5f9a2b")
+
 def audit_log_execution(command: str, is_allowed: bool):
-    """Write an immutable audit log record for command execution attempts."""
+    """Write an immutable audit log record for command execution attempts with provenance."""
     log_file = os.path.join(os.path.dirname(__file__), "security_audit.log")
     import datetime
+    import getpass
+    
     timestamp = datetime.datetime.utcnow().isoformat()
     status = "ALLOWED" if is_allowed else "BLOCKED"
+    user = getpass.getuser()
+    
+    # Simple log integrity validation (chaining hashes) could go here
+    log_entry = f"[{timestamp}] [{status}] [User: {user}] [Token: {AGENT_AUTH_TOKEN[:6]}...] COMMAND: {command}\n"
+    
     try:
         with open(log_file, "a") as f:
-            f.write(f"[{timestamp}] [{status}] COMMAND: {command}\n")
+            f.write(log_entry)
     except Exception as e:
         logger.error(f"Failed to write to audit log: {e}")
+
+def validate_agent_token(provided_token: str) -> bool:
+    """Mocks validation of signed tasks ensuring they originate from the mother orchestrator."""
+    return provided_token == AGENT_AUTH_TOKEN
 
 def is_command_allowed(command: str) -> bool:
     """Validates if a given command is within the authorized whitelist."""

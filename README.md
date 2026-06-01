@@ -4,6 +4,8 @@
 
 AutoPatch AI Agent is a fully on-premise, lightweight, and scalable endpoint orchestration platform designed to automate vulnerability remediation, coordinate managed reboots, and detect suspicious threat anomalies across thousands of Windows assets. 
 
+It provides an enterprise-grade experience unifying SOC/NOC telemetry, active orchestration workflows, and an immutable secure-execution agent.
+
 Built for modern SOC/NOC environments, AutoPatch AI integrates seamless endpoint discovery with actionable patch deployments to drastically reduce mean time to remediation (MTTR) while keeping operations strictly isolated from cloud dependencies.
 
 ---
@@ -34,6 +36,8 @@ The platform operates via a polling architecture designed for low endpoint overh
 +---+---+                 +---+---+                 +---+---+
     |                         |                         |
 [Scans /24]               [Scans /24]               [Scans /24]
+| (RDP/SMB)               |                         |
++---> [Shadow Assets]     +---> [Shadow Assets]     +---> [Shadow Assets]
 ```
 
 ### Core Components
@@ -106,6 +110,14 @@ We are actively evolving this orchestration tool into a full AI-driven cognitive
 - [ ] **PostgreSQL Migration**: Upgrade backend from SQLite to distributed Postgres for enterprise scale.
 - [ ] **Role-Based Access Control (RBAC)**: Distinct permissions for NOC Operators vs SOC Analysts.
 - [ ] **Full EDR Hooks**: Enhance the Threat Awareness engine with ETW (Event Tracing for Windows) logs.
+
+### Troubleshooting
+
+**Problem: Agent tasks are stuck in "Pending" state.**
+* **Solution**: Verify the `AGENT_EXECUTOR_INTERVAL` variable is correctly exported in `.env` and that the agent's target hostname correctly aligns with the orchestration backend registry.
+
+**Problem: Agent execution is blocked for legitimate PowerShell tasks.**
+* **Solution**: Check the `security_audit.log` file on the endpoint. If your script uses aliases like `iex`, it will be blocked natively. Ensure your scripts are mapped within the `TRUSTED_SCRIPT_REGISTRY` dict in `agent/security.py`.
 
 ---
 

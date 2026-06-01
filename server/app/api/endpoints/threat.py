@@ -27,25 +27,33 @@ def report_threat_alert(
 ) -> Any:
     """Agent reports a new threat anomaly with compromise scoring correlation."""
     
-    # Simulate a compromise score calculation by checking consecutive recent threats
-    # For MVP, we elevate severity dynamically if there are multiple alerts for this host
+    # Simulate a compromise score calculation and event timeline correlation
+    # For MVP, we elevate severity dynamically and calculate a base risk score
     from datetime import datetime, timedelta
     
     recent_threats = db.query(models.ThreatAlert).filter(
         models.ThreatAlert.hostname == alert_in.hostname,
-        models.ThreatAlert.detected_at >= datetime.utcnow() - timedelta(minutes=5)
-    ).count()
+        models.ThreatAlert.detected_at >= datetime.utcnow() - timedelta(minutes=60)
+    ).all()
 
+    threat_count = len(recent_threats)
+    compromise_score = min(100, (threat_count * 15) + (25 if alert_in.severity in ["High", "Critical"] else 10))
+    
     final_severity = alert_in.severity
-    if recent_threats >= 2 and final_severity not in ["High", "Critical"]:
+    if threat_count >= 2 and final_severity not in ["High", "Critical"]:
         final_severity = "High"
-        logger.warning(f"Elevated threat severity for {alert_in.hostname} due to consecutive alerts.")
+    if compromise_score > 80:
+        final_severity = "Critical"
+        logger.warning(f"CRITICAL COMPROMISE SCORE [{compromise_score}/100] reached for {alert_in.hostname}.")
+        
+    # Append the compromise score to the description as a correlated artifact for the dashboard
+    final_description = f"{alert_in.description} | Associated Host Risk Score: {compromise_score}/100"
         
     alert = models.ThreatAlert(
         hostname=alert_in.hostname,
         alert_type=alert_in.alert_type,
         severity=final_severity,
-        description=alert_in.description,
+        description=final_description,
         forensic_artifacts=alert_in.forensic_artifacts
     )
     db.add(alert)

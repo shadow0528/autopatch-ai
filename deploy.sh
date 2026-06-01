@@ -27,8 +27,16 @@ if [ ! -f ".env" ]; then
     cp .env.example .env
 fi
 
-# 3. Setup Backend
+# 3. Validation Prompts
+echo "Validating environment configuration..."
+grep "fallback-dev-key" .env > /dev/null
+if [ $? -eq 0 ]; then
+    echo "WARNING: You are using the default insecure fallback SECRET_KEY in your .env file."
+    echo "         Please replace it before deploying to production!"
+fi
 echo ""
+
+# 4. Setup Backend
 echo "[1/3] Setting up Backend API Engine..."
 cd server
 python3 -m venv venv
@@ -36,7 +44,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 cd ..
 
-# 4. Setup Frontend
+# 5. Setup Frontend
 echo ""
 echo "[2/3] Setting up Dashboard UI..."
 cd dashboard
@@ -44,7 +52,7 @@ npm install
 npm run build
 cd ..
 
-# 5. Setup Agent Locally (For testing)
+# 6. Setup Agent Locally (For testing)
 echo ""
 echo "[3/3] Setting up Local Test Agent..."
 cd agent

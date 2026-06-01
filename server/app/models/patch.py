@@ -14,3 +14,4 @@ class PatchTask(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     output_log = Column(String, nullable=True)
+    execution_history = Column(String, nullable=True) # JSON store of historical execution attempts/rollbacks

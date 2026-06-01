@@ -33,11 +33,20 @@ def run_diagnostic_repair(failure_reason: str) -> bool:
         except Exception as e:
             logger.error(f"Failed to run DISM/SFC: {e}")
         
-    elif "dependency" in failure_reason.lower():
+    elif "dependency" in failure_reason.lower() or "not found" in failure_reason.lower():
         diagnosis["category"] = "Missing Dependency"
-        diagnosis["action"] = "Trigger Prerequisite Scan"
-        diagnosis["success"] = True
-        
+        diagnosis["action"] = "Trigger Prerequisite Scan & Network Refresh"
+        try:
+            # Simulated remediation suggestion applied dynamically
+            subprocess.run(["powershell", "-Command", "ipconfig /flushdns; Start-Sleep 1"], capture_output=True, timeout=60)
+            diagnosis["success"] = True
+        except Exception as e:
+            logger.error(f"Failed to trigger dependency remediation: {e}")
+            
+    else:
+        diagnosis["category"] = "General Exception"
+        diagnosis["action"] = "No matching runbook found. Escalating to Manual Review."
+
     logger.info(f"Self-Heal Diagnostic Report: {json.dumps(diagnosis)}")
     return diagnosis["success"]
 

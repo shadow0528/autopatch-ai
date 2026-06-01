@@ -60,11 +60,29 @@ def execute_winget(package_id: str) -> dict:
     except Exception as e:
         return {"status": "Failed", "output": str(e)}
 
+def validate_kb_installation(kb_number: str) -> bool:
+    """Validates if a specific KB has been successfully installed."""
+    try:
+        command = f"Get-HotFix -Id {kb_number}"
+        res = subprocess.run(["powershell", "-Command", command], capture_output=True, text=True)
+        return res.returncode == 0 and kb_number in res.stdout
+    except Exception:
+        return False
+
 def execute_windows_update(kb_number: str) -> dict:
     """Executes a Windows Update installation for a specific KB using the PSWindowsUpdate module."""
-    # Use PSWindowsUpdate command to install specific KB
+    if validate_kb_installation(kb_number):
+        return {"status": "Success", "output": f"KB {kb_number} is already installed."}
+        
     command = f"Get-WindowsUpdate -KBArticleID {kb_number} -Install -AcceptAll -IgnoreReboot"
-    return execute_powershell(command)
+    result = execute_powershell(command)
+    
+    # Optional Mock Rollback block if the patch failed catastrophically
+    if result["status"] == "Failed" and "0x800f081f" in result["output"]:
+        logger.warning(f"Simulating rollback for catastrophic failure on {kb_number}...")
+        # execute_powershell(f"wusa /uninstall /kb:{kb_number.replace('KB', '')} /quiet /norestart")
+        
+    return result
 
 def handle_reboots(hostname: str, server_url: str):
     """Poll the backend API for approved reboot requests and execute post-reboot validation."""
@@ -83,13 +101,23 @@ def handle_reboots(hostname: str, server_url: str):
                     logger.info(f"Reboot request #{rb['id']} executing. Validating post-reboot state...")
                     
                     # For MVP, we simulate that the reboot has already occurred since the agent is running
+                    
+                    # Simulated mock post-reboot checks
+                    def check_health():
+                        import psutil
+                        return "Success" if psutil.cpu_percent() < 90 else "Failed"
+                        
                     validation_payload = {
                         "status": "Completed",
                         "agent_reconnect_validated": "Success",
                         "patch_validated": "Success",
-                        "vulnerability_validated": "Success",
-                        "service_health_validated": "Success"
+                        "vulnerability_validated": "Pending", # Would integrate with Qualys scan hook
+                        "service_health_validated": check_health()
                     }
+                    
+                    # Simulated Reboot scheduling delay
+                    import time
+                    time.sleep(2)
                     
                     update_url = f"{server_url}/api/v1/reboots/{rb['id']}"
                     requests.put(update_url, json=validation_payload, timeout=5)
@@ -138,7 +166,12 @@ def fetch_and_execute_tasks(hostname: str, server_url: str):
                     final_status = "Reboot Pending"
                     
                 logger.info(f"Task #{task_id} finished with status: {final_status}")
-                requests.put(update_url, json={"status": final_status, "output_log": result['output']}, timeout=5)
+                
+                # Storing minimal execution history string
+                import json
+                history_json = json.dumps([{"timestamp": time.time(), "status": final_status}])
+                
+                requests.put(update_url, json={"status": final_status, "output_log": result['output'], "execution_history": history_json}, timeout=5)
                 
     except requests.exceptions.Timeout:
         logger.warning(f"Timeout fetching tasks from server: {poll_url}")
