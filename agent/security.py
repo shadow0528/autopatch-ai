@@ -20,6 +20,12 @@ TRUSTED_SCRIPT_REGISTRY = {
     "C:\\Program Files\\AutoPatchAI\\repair_windows_update.ps1": "EXPECTED_SHA256_HASH_HERE",
 }
 
+# Directories completely trusted by the agent for script execution
+TRUSTED_DIRECTORIES = [
+    "C:\\Program Files\\AutoPatchAI\\Scripts\\",
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules\\"
+]
+
 import os
 import hashlib
 
@@ -75,11 +81,20 @@ def is_command_allowed(command: str) -> bool:
     # If the command isn't a whitelisted string, check if it's a call to a script in our trusted registry
     if command.endswith(".ps1"):
         script_path = command.strip()
+        
+        # Exact registry match
         if script_path in TRUSTED_SCRIPT_REGISTRY:
             # We would invoke verify_script_hash here dynamically if the file existed locally on this agent instance
             audit_log_execution(command, True)
             return True
             
+        # Trusted Directory Prefix Match
+        for directory in TRUSTED_DIRECTORIES:
+            if script_path.startswith(directory):
+                logger.info(f"Authorized script execution via trusted directory: {directory}")
+                audit_log_execution(command, True)
+                return True
+                
     logger.warning(f"Blocked unwhitelisted command or unauthorized script: {command}")
     audit_log_execution(command, False)
     return False

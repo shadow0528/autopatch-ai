@@ -77,11 +77,18 @@ def execute_windows_update(kb_number: str) -> dict:
     command = f"Get-WindowsUpdate -KBArticleID {kb_number} -Install -AcceptAll -IgnoreReboot"
     result = execute_powershell(command)
     
-    # Optional Mock Rollback block if the patch failed catastrophically
+    # Active Rollback block if the patch failed catastrophically
     if result["status"] == "Failed" and "0x800f081f" in result["output"]:
-        logger.warning(f"Simulating rollback for catastrophic failure on {kb_number}...")
-        # execute_powershell(f"wusa /uninstall /kb:{kb_number.replace('KB', '')} /quiet /norestart")
-        
+        logger.warning(f"Catastrophic failure on {kb_number}. Initiating auto-rollback orchestration...")
+        rollback_cmd = f"wusa /uninstall /kb:{kb_number.replace('KB', '')} /quiet /norestart"
+        rollback_result = execute_powershell(rollback_cmd)
+        if rollback_result["status"] == "Success":
+            logger.info(f"Rollback successful for {kb_number}.")
+            result["output"] += "\n[System Auto-Rolled Back to Last Known Good State]"
+        else:
+            logger.error(f"Rollback failed for {kb_number}.")
+            result["output"] += f"\n[Rollback Failed: {rollback_result['output']}]"
+            
     return result
 
 def handle_reboots(hostname: str, server_url: str):
@@ -90,8 +97,18 @@ def handle_reboots(hostname: str, server_url: str):
         res = requests.get(f"{server_url}/api/v1/reboots/", timeout=10)
         if res.status_code == 200:
             reboots = res.json()
+            import datetime
+            
             for rb in reboots:
                 if req_matches_host(rb, hostname) and rb['status'] == "Approved":
+                    # Check scheduling
+                    if rb.get('scheduled_for'):
+                        # Simplified string comparison for scheduling window (UTC)
+                        now_str = datetime.datetime.utcnow().isoformat()
+                        if now_str < rb['scheduled_for']:
+                            logger.info(f"Reboot #{rb['id']} is scheduled for the future ({rb['scheduled_for']}). Skipping execution.")
+                            continue
+
                     logger.info(f"Executing approved reboot request #{rb['id']}...")
                     
                     # Mark request as executing to prevent double-reboots by agent overlap

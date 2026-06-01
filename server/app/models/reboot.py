@@ -11,6 +11,7 @@ class RebootRequest(Base):
     reboot_type = Column(String) # 'Single', 'Batch', 'Subnet'
     status = Column(String, default="Pending Approval") # Pending Approval, Approved, Executing, Completed, Failed
     requested_at = Column(DateTime(timezone=True), server_default=func.now())
+    scheduled_for = Column(DateTime(timezone=True), nullable=True)
     approved_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     

@@ -193,6 +193,48 @@ async function DashboardStats() {
           </div>
         </div>
       </div>
+      <div className="bg-gray-900/40 border border-gray-800/60 rounded-xl p-6 shadow-2xl backdrop-blur-sm">
+        <h3 className="text-lg font-medium tracking-wide text-gray-300 mb-6 flex items-center">
+          <svg className="w-5 h-5 mr-2 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+          Compliance Heatmap
+        </h3>
+        <div className="grid grid-cols-6 gap-2">
+            {[...Array(24)].map((_, i) => (
+                <div key={i} className={`h-8 rounded-sm animate-pulse shadow-inner border border-gray-800/50 ${Math.random() > 0.8 ? 'bg-rose-500/40' : Math.random() > 0.6 ? 'bg-amber-500/40' : 'bg-emerald-500/40'}`} title={`Simulated Asset Sector ${i}`}></div>
+            ))}
+        </div>
+        <div className="flex space-x-4 mt-4 text-xs font-mono text-gray-500 justify-end">
+            <span className="flex items-center"><span className="w-2 h-2 bg-emerald-500/40 rounded-sm mr-1 border border-emerald-500/30"></span> Secure</span>
+            <span className="flex items-center"><span className="w-2 h-2 bg-amber-500/40 rounded-sm mr-1 border border-amber-500/30"></span> Reboot Req.</span>
+            <span className="flex items-center"><span className="w-2 h-2 bg-rose-500/40 rounded-sm mr-1 border border-rose-500/30"></span> Vuln. Found</span>
+        </div>
+      </div>
+      <div className="bg-gray-900/40 border border-gray-800/60 rounded-xl p-6 shadow-2xl backdrop-blur-sm">
+        <h3 className="text-lg font-medium tracking-wide text-gray-300 mb-6 flex items-center">
+          <svg className="w-5 h-5 mr-2 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          Active Threat Severities
+        </h3>
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-400">Critical Anomalies</span>
+                <div className="w-2/3 bg-gray-800 rounded-full h-2">
+                    <div className="bg-rose-500 h-2 rounded-full" style={{ width: '15%' }}></div>
+                </div>
+            </div>
+            <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-400">High Severity</span>
+                <div className="w-2/3 bg-gray-800 rounded-full h-2">
+                    <div className="bg-orange-500 h-2 rounded-full" style={{ width: '35%' }}></div>
+                </div>
+            </div>
+            <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-400">Medium Alerts</span>
+                <div className="w-2/3 bg-gray-800 rounded-full h-2">
+                    <div className="bg-amber-500 h-2 rounded-full" style={{ width: '65%' }}></div>
+                </div>
+            </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -217,6 +259,52 @@ export default function Dashboard() {
       <Suspense fallback={<div className="text-gray-500 p-4">Loading stats...</div>}>
         <DashboardStats />
       </Suspense>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+        <div className="bg-gray-900/40 border border-gray-800/60 rounded-xl p-6 shadow-2xl backdrop-blur-sm">
+          <h3 className="text-lg font-medium tracking-wide text-gray-300 mb-6 flex items-center">
+            <svg className="w-5 h-5 mr-2 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+            Compliance Heatmap
+          </h3>
+          <div className="grid grid-cols-6 gap-2">
+              {[...Array(24)].map((_, i) => (
+                  <div key={i} className={`h-8 rounded-sm animate-pulse shadow-inner border border-gray-800/50 ${Math.random() > 0.8 ? 'bg-rose-500/40' : Math.random() > 0.6 ? 'bg-amber-500/40' : 'bg-emerald-500/40'}`} title={`Simulated Asset Sector ${i}`}></div>
+              ))}
+          </div>
+          <div className="flex space-x-4 mt-4 text-xs font-mono text-gray-500 justify-end">
+              <span className="flex items-center"><span className="w-2 h-2 bg-emerald-500/40 rounded-sm mr-1 border border-emerald-500/30"></span> Secure</span>
+              <span className="flex items-center"><span className="w-2 h-2 bg-amber-500/40 rounded-sm mr-1 border border-amber-500/30"></span> Reboot Req.</span>
+              <span className="flex items-center"><span className="w-2 h-2 bg-rose-500/40 rounded-sm mr-1 border border-rose-500/30"></span> Vuln. Found</span>
+          </div>
+        </div>
+        
+        <div className="bg-gray-900/40 border border-gray-800/60 rounded-xl p-6 shadow-2xl backdrop-blur-sm">
+          <h3 className="text-lg font-medium tracking-wide text-gray-300 mb-6 flex items-center">
+            <svg className="w-5 h-5 mr-2 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            Active Threat Severities
+          </h3>
+          <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">Critical Anomalies</span>
+                  <div className="w-2/3 bg-gray-800 rounded-full h-2">
+                      <div className="bg-rose-500 h-2 rounded-full" style={{ width: '15%' }}></div>
+                  </div>
+              </div>
+              <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">High Severity</span>
+                  <div className="w-2/3 bg-gray-800 rounded-full h-2">
+                      <div className="bg-orange-500 h-2 rounded-full" style={{ width: '35%' }}></div>
+                  </div>
+              </div>
+              <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">Medium Alerts</span>
+                  <div className="w-2/3 bg-gray-800 rounded-full h-2">
+                      <div className="bg-amber-500 h-2 rounded-full" style={{ width: '65%' }}></div>
+                  </div>
+              </div>
+          </div>
+        </div>
+      </div>
 
       <section className="mb-10 bg-gray-900/40 border border-gray-800/60 rounded-xl p-6 shadow-2xl backdrop-blur-sm">
         <h3 className="text-lg font-medium tracking-wide text-gray-300 mb-6 flex items-center">

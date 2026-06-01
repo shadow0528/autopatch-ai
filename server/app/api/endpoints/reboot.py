@@ -19,6 +19,7 @@ def create_reboot_request(
     req = models.RebootRequest(
         target=request_in.target,
         reboot_type=request_in.reboot_type,
+        scheduled_for=request_in.scheduled_for,
         status="Pending Approval"
     )
     db.add(req)

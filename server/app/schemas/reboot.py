@@ -5,6 +5,7 @@ from datetime import datetime
 class RebootRequestBase(BaseModel):
     target: str
     reboot_type: str
+    scheduled_for: Optional[datetime] = None
 
 class RebootRequestCreate(RebootRequestBase):
     pass
@@ -20,6 +21,7 @@ class RebootRequestInDBBase(RebootRequestBase):
     id: int
     status: str
     requested_at: datetime
+    scheduled_for: Optional[datetime] = None
     approved_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     agent_reconnect_validated: str
