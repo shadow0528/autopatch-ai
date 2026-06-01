@@ -1,0 +1,42 @@
+from typing import Any, List
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from app.db.session import get_db
+from app.models import threat as models
+from app.schemas import threat as schemas
+
+router = APIRouter()
+
+@router.post("/", response_model=schemas.ThreatAlert)
+def report_threat_alert(
+    *,
+    db: Session = Depends(get_db),
+    alert_in: schemas.ThreatAlertCreate,
+) -> Any:
+    """Agent reports a new threat anomaly."""
+    alert = models.ThreatAlert(
+        hostname=alert_in.hostname,
+        alert_type=alert_in.alert_type,
+        severity=alert_in.severity,
+        description=alert_in.description
+    )
+    db.add(alert)
+    db.commit()
+    db.refresh(alert)
+    
+    # In a full deployment, trigger email notification here based on severity
+    if alert.severity in ["High", "Critical"]:
+        # send_email_alert(alert)
+        pass
+        
+    return alert
+
+@router.get("/", response_model=List[schemas.ThreatAlert])
+def read_threat_alerts(
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100,
+) -> Any:
+    """Retrieve all threat alerts."""
+    return db.query(models.ThreatAlert).order_by(models.ThreatAlert.detected_at.desc()).offset(skip).limit(limit).all()
