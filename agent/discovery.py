@@ -71,11 +71,13 @@ def run_discovery_scan(subnet: str, server_url: str, agent_hostname: str):
     # Fetch currently registered agents from the backend to identify shadow assets
     known_agents_ips = []
     try:
-        res = requests.get(f"{server_url}/api/v1/agents/", timeout=10)
+        res = requests.get(f"{server_url}/api/v1/agents/", timeout=15)
         if res.status_code == 200:
             known_agents_ips = [a.get("ip_address") for a in res.json()]
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"Network error fetching known agents to verify shadow assets: {e}")
     except Exception as e:
-        logger.warning(f"Could not fetch known agents to verify shadow assets: {e}")
+        logger.warning(f"Unexpected error fetching known agents: {e}")
 
     discovery_url = f"{server_url}/api/v1/discovery/"
     
@@ -85,10 +87,15 @@ def run_discovery_scan(subnet: str, server_url: str, agent_hostname: str):
             continue
             
         # Try to resolve hostname; this can be slow, so we timeout quickly or pass None
+        # We enforce a short timeout on resolution explicitly
+        target_hostname = None
         try:
+            socket.setdefaulttimeout(1.0)
             target_hostname = socket.gethostbyaddr(ip)[0]
-        except Exception:
+        except (socket.herror, socket.timeout, OSError):
             target_hostname = None
+        finally:
+            socket.setdefaulttimeout(None) # reset global default
             
         payload = {
             "ip_address": ip,
@@ -98,10 +105,12 @@ def run_discovery_scan(subnet: str, server_url: str, agent_hostname: str):
         }
         
         try:
-            response = requests.post(discovery_url, json=payload, timeout=5)
+            response = requests.post(discovery_url, json=payload, timeout=10)
             if response.status_code != 200:
-                logger.warning(f"Failed to report shadow asset {ip}: {response.text}")
+                logger.warning(f"Failed to report shadow asset {ip}. HTTP {response.status_code}: {response.text}")
             else:
                 logger.info(f"Reported new unmanaged shadow asset found: {ip}")
+        except requests.exceptions.Timeout:
+            logger.error(f"Timeout reporting discovery for {ip} to server.")
         except requests.exceptions.RequestException as e:
-            logger.error(f"Error connecting to server to report discovery: {e}")
+            logger.error(f"Network error reporting discovery for {ip}: {e}")

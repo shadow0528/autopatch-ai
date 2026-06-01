@@ -1,84 +1,134 @@
-# AutoPatch AI Agent
+# 🔥 AutoPatch AI Agent
 
-This is an R&D lab project that aims to become a working MVP for a fully on-prem autonomous vulnerability remediation and patch orchestration platform.
+**Autonomous Vulnerability Remediation & Endpoint Orchestration Platform**
 
-## Features (Phase 1)
-- Backend skeleton
-- Database models
-- Agent registration
-- Heartbeat
-- Dashboard basics (Next.js)
+AutoPatch AI Agent is a fully on-premise, lightweight, and scalable endpoint orchestration platform designed to automate vulnerability remediation, coordinate managed reboots, and detect suspicious threat anomalies across thousands of Windows assets. 
 
-## How to run locally
+Built for modern SOC/NOC environments, AutoPatch AI integrates seamless endpoint discovery with actionable patch deployments to drastically reduce mean time to remediation (MTTR) while keeping operations strictly isolated from cloud dependencies.
 
-### 1. Backend Server Setup
-To run the server, ensure you have Python 3.9+ installed.
+---
 
-1. Navigate to the `server` directory:
-   ```bash
-   cd server
-   ```
+## 🏗️ Architecture
 
-2. Create a virtual environment (optional but recommended):
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
+The platform operates via a polling architecture designed for low endpoint overhead and secure, one-way communication.
 
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Run the FastAPI server:
-   ```bash
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-   ```
-
-5. Access the API documentation:
-   Open a browser and navigate to `http://localhost:8000/docs` to see the Swagger UI.
-
-### 2. Testing the APIs (Phase 1)
-
-**Heartbeat / Registration API**
-```bash
-curl -X 'POST' \
-  'http://localhost:8000/api/v1/agents/heartbeat' \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "hostname": "win-server-01",
-  "ip_address": "192.168.1.100",
-  "cpu_utilization": 15.5,
-  "memory_utilization": 45.2,
-  "agent_version": "1.0.0"
-}'
+```text
+                  +-----------------------+
+                  |  SOC/NOC Dashboard    |
+                  |  (Next.js / React)    |
+                  +-----------+-----------+
+                              |
+                              v
+                  +-----------------------+
+                  |  Central Mother API   |
+                  |  (FastAPI / SQLite)   |
+                  +-----------+-----------+
+                              ^
+        [Polls for Tasks]     |    [Sends Heartbeats & Threats]
+                              |
+    +-------------------------+-------------------------+
+    |                         |                         |
++---+---+                 +---+---+                 +---+---+
+| Agent |                 | Agent |                 | Agent |
+| Sub 1 |                 | Sub 2 |                 | Sub N |
++---+---+                 +---+---+                 +---+---+
+    |                         |                         |
+[Scans /24]               [Scans /24]               [Scans /24]
 ```
 
-**List Agents**
+### Core Components
+1. **Central "Mother" Server**: A FastAPI/SQLAlchemy REST backend that orchestrates tasks, collects endpoint metrics, and maintains the centralized SQLite (or Postgres) inventory.
+2. **Next.js Dashboard**: A dark-mode, cybersecurity-styled React web application featuring analytical charts, queue management, and real-time operational visibility.
+3. **Lightweight Python Agent**: An endpoint-deployed polling client containing modular threads for heartbeat transmission, async subnet discovery, Powershell patch execution, and threat monitoring.
+
+---
+
+## ✨ Features
+
+* **Subnet-Aware Host Discovery**: Asynchronous socket scanning on RDP (3389) and SMB (445) ports to detect shadow/unmanaged assets automatically.
+* **Qualys CSV Integration**: Ingests bulk vulnerability assessments to track QIDs, severity, and remediation requirements globally.
+* **Patch Orchestration Engine**: Securely executes `Install-WindowsUpdate`, `winget` upgrades, or approved PowerShell remediation scripts.
+* **Controlled Reboot Approvals**: Separates patch installation from system reboots, enforcing administrative approval for single, batch, or entire subnet reboots with post-validation checks.
+* **Failure Intelligence & Self-Healing**: Captures structured failure logs and automatically initiates diagnostic service restarts or `DISM`/`sfc` corruption repairs before retrying.
+* **Threat Awareness Engine**: Continuously monitors endpoint CPU/Memory utilization and scans for unauthorized/malicious process executions (e.g. `mimikatz`), triggering instant alerts.
+* **Strict Security Execution Model**: Employs immutable audit logging and a rigid command whitelist to block arbitrary remote execution or encoded PowerShell payloads.
+
+---
+
+## 📸 Dashboard Preview
+
+*(Add screenshots here)*
+* **Dashboard Overview**: `[Placeholder: dashboard_overview.png]`
+* **Asset Inventory**: `[Placeholder: asset_inventory.png]`
+* **Patch Orchestration Queue**: `[Placeholder: patch_queue.png]`
+* **Reboot Approvals**: `[Placeholder: reboot_approvals.png]`
+* **Threat Anomalies**: `[Placeholder: threat_alerts.png]`
+
+---
+
+## 🚀 Setup Instructions
+
+### Prerequisites
+* Python 3.9+
+* Node.js v18+ & npm
+* Windows OS (for Agent deployment)
+
+### 1. Configuration Setup
+Create a `.env` file in the root directory based on the provided template:
 ```bash
-curl -X 'GET' \
-  'http://localhost:8000/api/v1/agents/' \
-  -H 'accept: application/json'
+cp .env.example .env
 ```
 
-### 3. Dashboard Server Setup
-To run the dashboard, ensure you have Node.js and npm installed.
+### 2. Run All Services
+A convenient `startup.sh` script is provided to spin up the backend, frontend, and local agent concurrently.
+```bash
+chmod +x startup.sh
+./startup.sh
+```
 
-1. Navigate to the `dashboard` directory:
-   ```bash
-   cd dashboard
-   ```
+### Manual Execution
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+**Backend Server**
+```bash
+cd server
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
 
-3. Run the Next.js development server:
-   ```bash
-   npm run dev
-   ```
+**Frontend Dashboard**
+```bash
+cd dashboard
+npm install
+npm run dev
+```
 
-4. Access the dashboard:
-   Open a browser and navigate to `http://localhost:3000`. Ensure your backend server is running on port 8000.
+**Local Windows Agent**
+```bash
+cd agent
+python -m venv venv && source venv/Scripts/activate
+pip install -r requirements.txt
+python main.py
+```
+
+Access the dashboard at: `http://localhost:3000`
+
+---
+
+## 🗺️ Roadmap & Future Enhancements
+
+- [ ] **Active Directory Integration**: Sync managed endpoints directly with AD OUs.
+- [ ] **PostgreSQL Migration**: Upgrade backend from SQLite to distributed Postgres for enterprise scale.
+- [ ] **Role-Based Access Control (RBAC)**: Distinct permissions for NOC Operators vs SOC Analysts.
+- [ ] **Full EDR Hooks**: Enhance the Threat Awareness engine with ETW (Event Tracing for Windows) logs.
+
+---
+
+## 🤝 Contributing
+Contributions are welcome! Please ensure any submitted code aligns with the strict security whitelist execution models and utilizes asynchronous patterns where applicable.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request

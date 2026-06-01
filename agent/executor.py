@@ -16,6 +16,7 @@ def execute_powershell(command: str) -> dict:
         return {"status": "Failed", "output": "Execution blocked by agent security policy."}
         
     try:
+        logger.info(f"Executing authorized command: {command}")
         result = subprocess.run(
             ["powershell", "-Command", command],
             capture_output=True,
@@ -26,7 +27,11 @@ def execute_powershell(command: str) -> dict:
             return {"status": "Success", "output": result.stdout}
         else:
             return {"status": "Failed", "output": result.stderr}
+    except subprocess.TimeoutExpired:
+        logger.error(f"Execution timeout expired for command: {command}")
+        return {"status": "Failed", "output": "Execution timed out after 300 seconds."}
     except Exception as e:
+        logger.error(f"Exception during PowerShell execution: {e}")
         return {"status": "Failed", "output": str(e)}
 
 def execute_winget(package_id: str) -> dict:
@@ -121,5 +126,9 @@ def fetch_and_execute_tasks(hostname: str, server_url: str):
                 logger.info(f"Task #{task_id} finished with status: {final_status}")
                 requests.put(update_url, json={"status": final_status, "output_log": result['output']}, timeout=5)
                 
+    except requests.exceptions.Timeout:
+        logger.warning(f"Timeout fetching tasks from server: {poll_url}")
+    except requests.exceptions.ConnectionError:
+        logger.warning(f"Connection refused fetching tasks from server: {poll_url}")
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching tasks from server: {e}")
