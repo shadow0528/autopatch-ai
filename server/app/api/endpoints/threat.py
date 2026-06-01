@@ -25,11 +25,26 @@ def report_threat_alert(
     db: Session = Depends(get_db),
     alert_in: schemas.ThreatAlertCreate,
 ) -> Any:
-    """Agent reports a new threat anomaly."""
+    """Agent reports a new threat anomaly with compromise scoring correlation."""
+    
+    # Simulate a compromise score calculation by checking consecutive recent threats
+    # For MVP, we elevate severity dynamically if there are multiple alerts for this host
+    from datetime import datetime, timedelta
+    
+    recent_threats = db.query(models.ThreatAlert).filter(
+        models.ThreatAlert.hostname == alert_in.hostname,
+        models.ThreatAlert.detected_at >= datetime.utcnow() - timedelta(minutes=5)
+    ).count()
+
+    final_severity = alert_in.severity
+    if recent_threats >= 2 and final_severity not in ["High", "Critical"]:
+        final_severity = "High"
+        logger.warning(f"Elevated threat severity for {alert_in.hostname} due to consecutive alerts.")
+        
     alert = models.ThreatAlert(
         hostname=alert_in.hostname,
         alert_type=alert_in.alert_type,
-        severity=alert_in.severity,
+        severity=final_severity,
         description=alert_in.description
     )
     db.add(alert)

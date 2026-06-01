@@ -115,8 +115,12 @@ Access the dashboard at: `http://localhost:3000`
 
 ---
 
-## 🗺️ Roadmap & Future Enhancements
+## 🤖 AI & Future Enhancements Roadmap
 
+We are actively evolving this orchestration tool into a full AI-driven cognitive system. The future roadmap includes:
+
+- [ ] **LLM-Driven Diagnostic Triage**: Integrates local LLM models (e.g. Llama 3) directly into the `self_heal.py` agent to interpret arbitrary Windows exit codes on the fly and dynamically synthesize safe remediation plans without strict pre-programmed paths.
+- [ ] **Heuristic Threat Correlation**: Incorporates machine learning to assign Bayesian probabilistic compromise scores rather than static anomaly triggers in the `monitoring.py` loops.
 - [ ] **Active Directory Integration**: Sync managed endpoints directly with AD OUs.
 - [ ] **PostgreSQL Migration**: Upgrade backend from SQLite to distributed Postgres for enterprise scale.
 - [ ] **Role-Based Access Control (RBAC)**: Distinct permissions for NOC Operators vs SOC Analysts.

@@ -29,12 +29,22 @@ def audit_log_execution(command: str, is_allowed: bool):
 
 def is_command_allowed(command: str) -> bool:
     """Validates if a given command is within the authorized whitelist."""
-    # Check for encoded PowerShell payloads, block them entirely immediately
-    if "-enc" in command.lower() or "-encodedcommand" in command.lower():
-        logger.warning(f"Blocked potential malicious encoded command: {command}")
-        audit_log_execution(command, False)
-        return False
-        
+    command_lower = command.lower()
+    
+    # Check for encoded PowerShell payloads, invoke expressions, and web downloads
+    blocked_signatures = [
+        "-enc", "-encodedcommand", 
+        "invoke-expression", "iex ", 
+        "invoke-webrequest", "iwr ", 
+        "net.webclient"
+    ]
+    
+    for sig in blocked_signatures:
+        if sig in command_lower:
+            logger.warning(f"Blocked potential malicious signature '{sig}' in command: {command}")
+            audit_log_execution(command, False)
+            return False
+            
     # Check for execution against whitelist
     for allowed in ALLOWED_COMMANDS:
         if command.strip().lower().startswith(allowed.lower()):

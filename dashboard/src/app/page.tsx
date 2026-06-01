@@ -137,58 +137,59 @@ async function DashboardStats() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-10">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" /></svg>
+      <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 p-6 rounded-xl relative overflow-hidden shadow-lg group hover:border-blue-500/50 transition-colors">
+        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" /></svg>
         </div>
-        <p className="text-gray-400 text-sm uppercase tracking-wider mb-2">Total Managed Assets</p>
+        <p className="text-blue-400 text-xs uppercase tracking-widest font-semibold mb-2">Total Managed Assets</p>
         <div className="flex items-baseline space-x-4">
-          <h3 className="text-4xl font-bold text-white">{total}</h3>
-          <div className="text-sm font-medium text-gray-500">
-            <span className="text-green-500">{online}</span> ON / <span className="text-red-500">{offline}</span> OFF
+          <h3 className="text-5xl font-light text-white tracking-tight">{total}</h3>
+          <div className="text-sm font-medium text-gray-500 flex space-x-2">
+            <span className="flex items-center text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>{online} ON</span> 
+            <span className="flex items-center text-rose-500"><span className="w-2 h-2 rounded-full bg-rose-500 mr-1"></span>{offline} OFF</span>
           </div>
         </div>
       </div>
       
-      <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-10">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+      <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 p-6 rounded-xl relative overflow-hidden shadow-lg group hover:border-purple-500/50 transition-colors">
+        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
         </div>
-        <p className="text-gray-400 text-sm uppercase tracking-wider mb-2">Avg Resource Utilization</p>
-        <div className="flex space-x-6">
+        <p className="text-purple-400 text-xs uppercase tracking-widest font-semibold mb-2">Cluster Resource Load</p>
+        <div className="flex space-x-8 mt-2">
           <div>
-            <h3 className="text-3xl font-bold text-blue-400">{avgCpu}%</h3>
-            <p className="text-xs text-gray-500 mt-1 uppercase">CPU</p>
+            <h3 className="text-3xl font-light text-white">{avgCpu}<span className="text-lg text-gray-500">%</span></h3>
+            <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">Avg CPU</p>
           </div>
           <div>
-            <h3 className="text-3xl font-bold text-purple-400">{avgMem}%</h3>
-            <p className="text-xs text-gray-500 mt-1 uppercase">Memory</p>
+            <h3 className="text-3xl font-light text-white">{avgMem}<span className="text-lg text-gray-500">%</span></h3>
+            <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">Avg RAM</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-10">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 p-6 rounded-xl relative overflow-hidden shadow-lg group hover:border-teal-500/50 transition-colors">
+        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
         </div>
-        <p className="text-gray-400 text-sm uppercase tracking-wider mb-2">Patch Compliance</p>
-        <h3 className={`text-4xl font-bold ${Number(compliance) >= 90 ? 'text-green-500' : 'text-yellow-500'}`}>{compliance}%</h3>
-        <p className="text-xs text-gray-500 mt-1">Based on Orchestrator Tasks</p>
+        <p className="text-teal-400 text-xs uppercase tracking-widest font-semibold mb-2">Patch Compliance</p>
+        <h3 className={`text-5xl font-light tracking-tight ${Number(compliance) >= 90 ? 'text-emerald-400' : 'text-amber-400'}`}>{compliance}<span className="text-2xl">%</span></h3>
+        <p className="text-xs text-gray-500 mt-2 font-mono">Globally Enforced</p>
       </div>
 
-      <div className="bg-gray-900 border border-gray-800 p-6 rounded-lg relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-10">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+      <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 p-6 rounded-xl relative overflow-hidden shadow-lg group hover:border-amber-500/50 transition-colors">
+        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
         </div>
-        <p className="text-gray-400 text-sm uppercase tracking-wider mb-2">Action Items Queue</p>
-        <div className="flex flex-col space-y-2">
-          <div className="flex justify-between items-center">
-             <span className="text-sm text-gray-300">Reboots Pending:</span>
-             <span className={`px-2 py-0.5 rounded text-xs font-bold ${pendingReboots > 0 ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-800' : 'bg-gray-800 text-gray-400'}`}>{pendingReboots}</span>
+        <p className="text-amber-400 text-xs uppercase tracking-widest font-semibold mb-3">Active Intel Queue</p>
+        <div className="flex flex-col space-y-3">
+          <div className="flex justify-between items-center group-hover:translate-x-1 transition-transform">
+             <span className="text-sm text-gray-400 font-medium">Reboots Pending</span>
+             <span className={`px-2.5 py-1 rounded-md text-xs font-bold shadow-inner ${pendingReboots > 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-gray-800/50 text-gray-500 border border-gray-700/50'}`}>{pendingReboots}</span>
           </div>
-          <div className="flex justify-between items-center">
-             <span className="text-sm text-gray-300">Shadow Assets:</span>
-             <span className={`px-2 py-0.5 rounded text-xs font-bold ${shadowAssets > 0 ? 'bg-orange-900/50 text-orange-400 border border-orange-800' : 'bg-gray-800 text-gray-400'}`}>{shadowAssets}</span>
+          <div className="flex justify-between items-center group-hover:translate-x-1 transition-transform delay-75">
+             <span className="text-sm text-gray-400 font-medium">Shadow Assets Detected</span>
+             <span className={`px-2.5 py-1 rounded-md text-xs font-bold shadow-inner ${shadowAssets > 0 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-gray-800/50 text-gray-500 border border-gray-700/50'}`}>{shadowAssets}</span>
           </div>
         </div>
       </div>
@@ -198,22 +199,38 @@ async function DashboardStats() {
 
 export default function Dashboard() {
   return (
-    <div className="space-y-6">
-      <header className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
+    <div className="space-y-8 max-w-[1600px] mx-auto">
+      <header className="flex justify-between items-end mb-10 pb-4 border-b border-gray-800/50">
+        <div>
+          <h2 className="text-4xl font-light tracking-tight text-white mb-1">Global Operations</h2>
+          <p className="text-gray-400 text-sm">Real-time endpoint telemetry and orchestration queue.</p>
+        </div>
+        <div className="flex items-center space-x-2">
+           <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+          </span>
+          <span className="text-sm font-mono text-emerald-400 uppercase tracking-wider">System Operational</span>
+        </div>
       </header>
 
       <Suspense fallback={<div className="text-gray-500 p-4">Loading stats...</div>}>
         <DashboardStats />
       </Suspense>
 
-      <section className="mb-8">
-        <h3 className="text-xl font-semibold mb-4 text-gray-200 border-b border-gray-800 pb-2">Resource Analytics</h3>
+      <section className="mb-10 bg-gray-900/40 border border-gray-800/60 rounded-xl p-6 shadow-2xl backdrop-blur-sm">
+        <h3 className="text-lg font-medium tracking-wide text-gray-300 mb-6 flex items-center">
+          <svg className="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+          Resource Allocation Analytics
+        </h3>
         <StatsCharts />
       </section>
 
-      <section>
-        <h3 className="text-xl font-semibold mb-4 text-gray-200 border-b border-gray-800 pb-2">Connected Agents</h3>
+      <section className="bg-gray-900/40 border border-gray-800/60 rounded-xl p-6 shadow-2xl backdrop-blur-sm">
+        <h3 className="text-lg font-medium tracking-wide text-gray-300 mb-6 flex items-center">
+          <svg className="w-5 h-5 mr-2 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+          Active Telemetry Stream
+        </h3>
         <Suspense fallback={<div className="text-gray-500 p-4">Loading agents...</div>}>
           <AgentsList />
         </Suspense>

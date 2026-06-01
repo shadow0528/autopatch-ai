@@ -27,6 +27,16 @@ def execute_powershell(command: str) -> dict:
             return {"status": "Success", "output": result.stdout}
         else:
             return {"status": "Failed", "output": result.stderr}
+        
+        # Check standard error block even if return code is 0 (PS handles streams oddly sometimes)
+        if "Exception" in result.stdout or "ErrorRecord" in result.stdout:
+            logger.error(f"PowerShell handled exception in stream for command: {command}")
+            return {"status": "Failed", "output": result.stdout}
+            
+        if result.returncode == 0:
+            return {"status": "Success", "output": result.stdout}
+        else:
+            return {"status": "Failed", "output": result.stderr}
     except subprocess.TimeoutExpired:
         logger.error(f"Execution timeout expired for command: {command}")
         return {"status": "Failed", "output": "Execution timed out after 300 seconds."}
@@ -59,14 +69,18 @@ def execute_windows_update(kb_number: str) -> dict:
 def handle_reboots(hostname: str, server_url: str):
     """Poll the backend API for approved reboot requests and execute post-reboot validation."""
     try:
-        # Note: Since there's no endpoint specifically to get approved reboots for an agent,
-        # we will fetch all and filter client side. In a production app, an agent-specific endpoint is better.
         res = requests.get(f"{server_url}/api/v1/reboots/", timeout=10)
         if res.status_code == 200:
             reboots = res.json()
             for rb in reboots:
                 if req_matches_host(rb, hostname) and rb['status'] == "Approved":
-                    logger.info(f"Received approved reboot request #{rb['id']}. Validating post-reboot state...")
+                    logger.info(f"Executing approved reboot request #{rb['id']}...")
+                    
+                    # Mark request as executing to prevent double-reboots by agent overlap
+                    update_url = f"{server_url}/api/v1/reboots/{rb['id']}"
+                    requests.put(update_url, json={"status": "Executing"}, timeout=5)
+                    
+                    logger.info(f"Reboot request #{rb['id']} executing. Validating post-reboot state...")
                     
                     # For MVP, we simulate that the reboot has already occurred since the agent is running
                     validation_payload = {
