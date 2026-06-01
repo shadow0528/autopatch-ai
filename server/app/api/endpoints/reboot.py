@@ -77,6 +77,12 @@ def approve_reboot_request(
     if not req:
         raise HTTPException(status_code=404, detail="Request not found")
         
+    # Check concurrent executing reboots for Batch limit enforcement
+    if req.reboot_type == "Batch":
+        executing_count = db.query(models.RebootRequest).filter(models.RebootRequest.status == "Executing").count()
+        if executing_count >= 10:
+            raise HTTPException(status_code=429, detail="Batch reboot limit reached. Cannot approve more until current queue finishes.")
+            
     req.status = "Approved"
     req.approved_at = datetime.utcnow()
     

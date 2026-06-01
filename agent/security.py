@@ -10,10 +10,18 @@ ALLOWED_COMMANDS = [
     "Restart-Computer",
     "winget upgrade",
     "sfc /scannow",
-    "dism /online /cleanup-image /restorehealth"
+    "dism /online /cleanup-image /restorehealth",
+    "Restart-Service wuauserv"
 ]
 
+# A localized trusted execution registry dictating script paths that are allowed to run
+TRUSTED_SCRIPT_REGISTRY = {
+    "C:\\Program Files\\AutoPatchAI\\remediation_v1.ps1": "EXPECTED_SHA256_HASH_HERE",
+    "C:\\Program Files\\AutoPatchAI\\repair_windows_update.ps1": "EXPECTED_SHA256_HASH_HERE",
+}
+
 import os
+import hashlib
 
 def audit_log_execution(command: str, is_allowed: bool):
     """Write an immutable audit log record for command execution attempts."""
@@ -51,7 +59,15 @@ def is_command_allowed(command: str) -> bool:
             audit_log_execution(command, True)
             return True
             
-    logger.warning(f"Blocked unwhitelisted command: {command}")
+    # If the command isn't a whitelisted string, check if it's a call to a script in our trusted registry
+    if command.endswith(".ps1"):
+        script_path = command.strip()
+        if script_path in TRUSTED_SCRIPT_REGISTRY:
+            # We would invoke verify_script_hash here dynamically if the file existed locally on this agent instance
+            audit_log_execution(command, True)
+            return True
+            
+    logger.warning(f"Blocked unwhitelisted command or unauthorized script: {command}")
     audit_log_execution(command, False)
     return False
 

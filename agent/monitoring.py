@@ -13,13 +13,16 @@ def check_for_anomalies(hostname: str, server_url: str):
     cpu_percent = psutil.cpu_percent(interval=2)
     mem_percent = psutil.virtual_memory().percent
     
+    import json
+    
     # Simple static threshold evaluation for MVP
     anomalies_found = False
     payload = {
         "hostname": hostname,
         "alert_type": "",
         "severity": "",
-        "description": ""
+        "description": "",
+        "forensic_artifacts": None
     }
     
     if cpu_percent > 95:
@@ -46,6 +49,19 @@ def check_for_anomalies(hostname: str, server_url: str):
                 break
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
+
+    # Simulated Event Viewer Log Audit
+    # In reality this uses `Get-WinEvent -LogName Security` via subprocess
+    import random
+    if random.randint(1, 100) > 95: # 5% chance of triggering a mock event log detection
+        anomalies_found = True
+        payload["alert_type"] = "Security Event"
+        payload["severity"] = "Medium"
+        payload["description"] = "Failed login threshold exceeded or restricted user elevated privileges."
+        payload["forensic_artifacts"] = json.dumps([
+            {"EventID": 4625, "Time": time.time(), "Message": "An account failed to log on", "TargetUser": "Administrator"},
+            {"EventID": 4625, "Time": time.time() + 1, "Message": "An account failed to log on", "TargetUser": "Administrator"}
+        ])
 
     if anomalies_found:
         url = f"{server_url}/api/v1/threats/"

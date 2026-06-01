@@ -45,7 +45,8 @@ def report_threat_alert(
         hostname=alert_in.hostname,
         alert_type=alert_in.alert_type,
         severity=final_severity,
-        description=alert_in.description
+        description=alert_in.description,
+        forensic_artifacts=alert_in.forensic_artifacts
     )
     db.add(alert)
     db.commit()

@@ -2,13 +2,15 @@ import Link from 'next/link';
 
 export default function Sidebar() {
   const links = [
-    { name: 'Dashboard', href: '/' },
-    { name: 'Assets', href: '/assets' },
-    { name: 'Vulnerabilities', href: '/vulnerabilities' },
-    { name: 'Patch Queue', href: '/patch-queue' },
-    { name: 'Reboot Queue', href: '/reboot-queue' },
-    { name: 'Threat Alerts', href: '/threat-alerts' },
-    { name: 'Logs', href: '/logs' },
+    { name: 'Dashboard Overview', href: '/' },
+    { name: 'Agent Fleet Status', href: '/agent-status' },
+    { name: 'Asset Inventory', href: '/assets' },
+    { name: 'Vulnerability Radar', href: '/vulnerabilities' },
+    { name: 'Patch Orchestration', href: '/patch-queue' },
+    { name: 'Reboot Approvals', href: '/reboot-queue' },
+    { name: 'Threat Intel', href: '/threat-alerts' },
+    { name: 'System Health', href: '/system-health' },
+    { name: 'Audit Logs', href: '/logs' },
   ];
 
   return (

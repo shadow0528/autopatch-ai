@@ -66,52 +66,33 @@ The platform operates via a polling architecture designed for low endpoint overh
 
 ---
 
-## 🚀 Setup Instructions
+## 🚀 Deployment Guide
 
 ### Prerequisites
 * Python 3.9+
 * Node.js v18+ & npm
-* Windows OS (for Agent deployment)
+* Windows OS (for Agent Endpoint deployment)
 
-### 1. Configuration Setup
-Create a `.env` file in the root directory based on the provided template:
+### 1. Unified Installation Workflow
+A `deploy.sh` script is bundled to rapidly install and configure the necessary python virtual environments and Next.js frontend requirements.
+
 ```bash
-cp .env.example .env
+chmod +x deploy.sh
+./deploy.sh
 ```
 
-### 2. Run All Services
-A convenient `startup.sh` script is provided to spin up the backend, frontend, and local agent concurrently.
+### 2. Service Execution
+Once the installation script completes, utilize the local start script to boot the Master Server, local test Agent, and the Dashboard concurrently:
+
 ```bash
 chmod +x startup.sh
 ./startup.sh
 ```
 
-### Manual Execution
-
-**Backend Server**
-```bash
-cd server
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
-
-**Frontend Dashboard**
-```bash
-cd dashboard
-npm install
-npm run dev
-```
-
-**Local Windows Agent**
-```bash
-cd agent
-python -m venv venv && source venv/Scripts/activate
-pip install -r requirements.txt
-python main.py
-```
-
 Access the dashboard at: `http://localhost:3000`
+
+### 3. Agent Execution (Standalone Endpoints)
+For enterprise rollout, the endpoint agents should be deployed using Windows Services. See the included Powershell helper in `agent/install_service.ps1` for instructions on packaging `main.py` via PyInstaller and wrapping it with `sc.exe` or `NSSM`.
 
 ---
 

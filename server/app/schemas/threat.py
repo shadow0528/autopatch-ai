@@ -1,11 +1,14 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
+from typing import Optional
+
 class ThreatAlertBase(BaseModel):
     hostname: str
     alert_type: str
     severity: str
     description: str
+    forensic_artifacts: Optional[str] = None
 
 class ThreatAlertCreate(ThreatAlertBase):
     pass
