@@ -13,18 +13,36 @@ ALLOWED_COMMANDS = [
     "dism /online /cleanup-image /restorehealth"
 ]
 
+import os
+
+def audit_log_execution(command: str, is_allowed: bool):
+    """Write an immutable audit log record for command execution attempts."""
+    log_file = os.path.join(os.path.dirname(__file__), "security_audit.log")
+    import datetime
+    timestamp = datetime.datetime.utcnow().isoformat()
+    status = "ALLOWED" if is_allowed else "BLOCKED"
+    try:
+        with open(log_file, "a") as f:
+            f.write(f"[{timestamp}] [{status}] COMMAND: {command}\n")
+    except Exception as e:
+        logger.error(f"Failed to write to audit log: {e}")
+
 def is_command_allowed(command: str) -> bool:
     """Validates if a given command is within the authorized whitelist."""
-    # Simple check for MVP; real-world would need AST parsing or rigid parameter constraints
-    for allowed in ALLOWED_COMMANDS:
-        if command.strip().lower().startswith(allowed.lower()):
-            return True
-            
-    # Check for encoded PowerShell payloads, block them entirely
+    # Check for encoded PowerShell payloads, block them entirely immediately
     if "-enc" in command.lower() or "-encodedcommand" in command.lower():
         logger.warning(f"Blocked potential malicious encoded command: {command}")
+        audit_log_execution(command, False)
         return False
         
+    # Check for execution against whitelist
+    for allowed in ALLOWED_COMMANDS:
+        if command.strip().lower().startswith(allowed.lower()):
+            audit_log_execution(command, True)
+            return True
+            
+    logger.warning(f"Blocked unwhitelisted command: {command}")
+    audit_log_execution(command, False)
     return False
 
 def verify_script_hash(script_path: str, expected_hash: str) -> bool:

@@ -42,15 +42,19 @@ def get_system_info():
     memory_info = psutil.virtual_memory()
     memory_utilization = memory_info.percent
     
-    # Note: Backend does not accept os_version right now based on our schema.
-    # We will log it here but omit it from the heartbeat payload.
     os_version = f"{platform.system()} {platform.release()}"
+    
+    # Calculate a mock subnet based on IP
+    parts = ip_address.split('.')
+    subnet = f"{parts[0]}.{parts[1]}.{parts[2]}.0/24" if len(parts) == 4 else "192.168.1.0/24"
     
     return {
         "hostname": hostname,
         "ip_address": ip_address,
         "cpu_utilization": cpu_utilization,
         "memory_utilization": memory_utilization,
+        "os_version": os_version,
+        "subnet": subnet,
         "agent_version": AGENT_VERSION
     }
 

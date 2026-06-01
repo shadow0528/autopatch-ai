@@ -6,6 +6,8 @@ interface Agent {
   id: number;
   hostname: string;
   ip_address: string;
+  subnet: string | null;
+  os_version: string | null;
   cpu_utilization: number;
   memory_utilization: number;
   agent_version: string;
@@ -45,6 +47,8 @@ async function AssetsTable() {
             <th className="px-6 py-4">ID</th>
             <th className="px-6 py-4">Hostname</th>
             <th className="px-6 py-4">IP Address</th>
+            <th className="px-6 py-4">Subnet</th>
+            <th className="px-6 py-4">OS Version</th>
             <th className="px-6 py-4">Agent Ver.</th>
             <th className="px-6 py-4">Status</th>
             <th className="px-6 py-4">Actions</th>
@@ -56,6 +60,8 @@ async function AssetsTable() {
               <td className="px-6 py-4 text-gray-500">#{agent.id}</td>
               <td className="px-6 py-4 font-medium text-white">{agent.hostname}</td>
               <td className="px-6 py-4 text-gray-400">{agent.ip_address}</td>
+              <td className="px-6 py-4 text-gray-400">{agent.subnet || 'Unknown'}</td>
+              <td className="px-6 py-4 text-gray-400 truncate max-w-[150px]" title={agent.os_version || 'Unknown'}>{agent.os_version || 'Unknown'}</td>
               <td className="px-6 py-4 text-gray-400">{agent.agent_version}</td>
               <td className="px-6 py-4">
                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${

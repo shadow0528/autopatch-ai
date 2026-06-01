@@ -2,6 +2,9 @@ import { Suspense } from 'react';
 
 export const dynamic = 'force-dynamic';
 
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LineChart, Line } from 'recharts';
+import StatsCharts from '@/components/StatsCharts';
+
 // Define the Agent interface based on our FastAPI backend schema
 interface Agent {
   id: number;
@@ -9,6 +12,8 @@ interface Agent {
   ip_address: string;
   cpu_utilization: number;
   memory_utilization: number;
+  os_version: string | null;
+  subnet: string | null;
   agent_version: string;
   last_seen: string;
   status: string;
@@ -47,9 +52,11 @@ async function AgentsList() {
           <tr>
             <th className="px-6 py-4">Hostname</th>
             <th className="px-6 py-4">IP Address</th>
+            <th className="px-6 py-4">Subnet</th>
             <th className="px-6 py-4">Status</th>
             <th className="px-6 py-4">CPU (%)</th>
             <th className="px-6 py-4">Memory (%)</th>
+            <th className="px-6 py-4">OS Version</th>
             <th className="px-6 py-4">Last Seen</th>
           </tr>
         </thead>
@@ -58,6 +65,7 @@ async function AgentsList() {
             <tr key={agent.id} className="border-b border-gray-800 hover:bg-gray-800/30 transition-colors">
               <td className="px-6 py-4 font-medium text-white">{agent.hostname}</td>
               <td className="px-6 py-4 text-gray-400">{agent.ip_address}</td>
+              <td className="px-6 py-4 text-gray-400">{agent.subnet || 'Unknown'}</td>
               <td className="px-6 py-4">
                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                   agent.status === 'online' ? 'bg-green-900/50 text-green-400 border border-green-800' : 'bg-red-900/50 text-red-400 border border-red-800'
@@ -67,6 +75,7 @@ async function AgentsList() {
               </td>
               <td className="px-6 py-4 text-gray-400">{agent.cpu_utilization.toFixed(1)}</td>
               <td className="px-6 py-4 text-gray-400">{agent.memory_utilization.toFixed(1)}</td>
+              <td className="px-6 py-4 text-gray-400 truncate max-w-[150px]" title={agent.os_version || 'Unknown'}>{agent.os_version || 'Unknown'}</td>
               <td className="px-6 py-4 text-gray-400">{new Date(agent.last_seen).toLocaleString()}</td>
             </tr>
           ))}
@@ -126,6 +135,11 @@ export default function Dashboard() {
       <Suspense fallback={<div className="text-gray-500 p-4">Loading stats...</div>}>
         <DashboardStats />
       </Suspense>
+
+      <section className="mb-8">
+        <h3 className="text-xl font-semibold mb-4 text-gray-200 border-b border-gray-800 pb-2">Resource Analytics</h3>
+        <StatsCharts />
+      </section>
 
       <section>
         <h3 className="text-xl font-semibold mb-4 text-gray-200 border-b border-gray-800 pb-2">Connected Agents</h3>

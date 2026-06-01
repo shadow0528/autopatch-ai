@@ -11,6 +11,8 @@ class Agent(Base):
     ip_address = Column(String)
     cpu_utilization = Column(Float, default=0.0)
     memory_utilization = Column(Float, default=0.0)
+    os_version = Column(String, nullable=True)
+    subnet = Column(String, nullable=True)
     agent_version = Column(String)
     last_seen = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     status = Column(String, default="online")

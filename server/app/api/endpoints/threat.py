@@ -5,8 +5,19 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models import threat as models
 from app.schemas import threat as schemas
+import logging
+
+logger = logging.getLogger("AutoPatchAPI.Threats")
 
 router = APIRouter()
+
+def send_email_alert(alert):
+    """Mocks an email alert transmission for high/critical threats."""
+    logger.warning(f"--- EMAIL ALERT DISPATCHED ---")
+    logger.warning(f"To: is-security-team@company.local")
+    logger.warning(f"Subject: [AutoPatch Security] {alert.severity} Alert on {alert.hostname}")
+    logger.warning(f"Body: A {alert.alert_type} anomaly was detected. {alert.description}")
+    logger.warning(f"------------------------------")
 
 @router.post("/", response_model=schemas.ThreatAlert)
 def report_threat_alert(
@@ -27,8 +38,7 @@ def report_threat_alert(
     
     # In a full deployment, trigger email notification here based on severity
     if alert.severity in ["High", "Critical"]:
-        # send_email_alert(alert)
-        pass
+        send_email_alert(alert)
         
     return alert
 

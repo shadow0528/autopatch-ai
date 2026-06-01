@@ -8,6 +8,8 @@ class AgentBase(BaseModel):
     ip_address: str
     cpu_utilization: Optional[float] = 0.0
     memory_utilization: Optional[float] = 0.0
+    os_version: Optional[str] = None
+    subnet: Optional[str] = None
     agent_version: str
 
 # Properties to receive via API on creation or heartbeat

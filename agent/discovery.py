@@ -10,22 +10,30 @@ logger = logging.getLogger("AutoPatchAgent.Discovery")
 SCAN_PORTS = [3389, 445]
 CONCURRENCY_LIMIT = 50
 
-async def check_port(ip: str, port: int) -> bool:
+async def check_port(ip: str, port: int, timeout: float = 1.5) -> bool:
     """Attempts an async socket connection to a specific port on an IP."""
-    conn = asyncio.open_connection(ip, port)
     try:
-        reader, writer = await asyncio.wait_for(conn, timeout=1.0)
+        conn = asyncio.open_connection(ip, port)
+        reader, writer = await asyncio.wait_for(conn, timeout=timeout)
         writer.close()
         await writer.wait_closed()
         return True
-    except Exception:
+    except (asyncio.TimeoutError, ConnectionRefusedError, OSError):
+        return False
+    except Exception as e:
+        logger.debug(f"Unexpected error checking {ip}:{port} - {e}")
         return False
 
 async def scan_host(ip: str) -> bool:
-    """Scans a single host to see if any Windows-related ports are open."""
-    for port in SCAN_PORTS:
-        if await check_port(ip, port):
-            return True
+    """Scans a single host to see if any Windows-related ports are open with a fallback."""
+    # RDP 3389 primary detection
+    if await check_port(ip, 3389):
+        return True
+        
+    # SMB 445 fallback
+    if await check_port(ip, 445):
+        return True
+        
     return False
 
 async def scan_subnet_async(subnet: str):
@@ -52,7 +60,7 @@ async def scan_subnet_async(subnet: str):
 def run_discovery_scan(subnet: str, server_url: str, agent_hostname: str):
     """
     Wrapper to run the async discovery scan synchronously and 
-    report findings back to the server.
+    report findings back to the server, filtering out existing assets (Shadow Asset Detection).
     """
     try:
         discovered_ips = asyncio.run(scan_subnet_async(subnet))
@@ -60,9 +68,22 @@ def run_discovery_scan(subnet: str, server_url: str, agent_hostname: str):
         logger.error(f"Invalid subnet provided for discovery: {e}")
         return
 
-    url = f"{server_url}/api/v1/discovery/"
+    # Fetch currently registered agents from the backend to identify shadow assets
+    known_agents_ips = []
+    try:
+        res = requests.get(f"{server_url}/api/v1/agents/", timeout=10)
+        if res.status_code == 200:
+            known_agents_ips = [a.get("ip_address") for a in res.json()]
+    except Exception as e:
+        logger.warning(f"Could not fetch known agents to verify shadow assets: {e}")
+
+    discovery_url = f"{server_url}/api/v1/discovery/"
     
     for ip in discovered_ips:
+        # If it's already a managed agent, skip it to avoid cluttering discovery logs
+        if ip in known_agents_ips:
+            continue
+            
         # Try to resolve hostname; this can be slow, so we timeout quickly or pass None
         try:
             target_hostname = socket.gethostbyaddr(ip)[0]
@@ -77,8 +98,10 @@ def run_discovery_scan(subnet: str, server_url: str, agent_hostname: str):
         }
         
         try:
-            response = requests.post(url, json=payload, timeout=5)
+            response = requests.post(discovery_url, json=payload, timeout=5)
             if response.status_code != 200:
-                logger.warning(f"Failed to report discovered asset {ip}: {response.text}")
+                logger.warning(f"Failed to report shadow asset {ip}: {response.text}")
+            else:
+                logger.info(f"Reported new unmanaged shadow asset found: {ip}")
         except requests.exceptions.RequestException as e:
             logger.error(f"Error connecting to server to report discovery: {e}")
