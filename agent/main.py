@@ -18,10 +18,12 @@ logger = logging.getLogger("AutoPatchAgent")
 # Server Configuration
 SERVER_URL = os.environ.get("AUTOPATCH_SERVER_URL", "http://127.0.0.1:8000")
 AGENT_VERSION = "1.0.0"
-HEARTBEAT_INTERVAL = 30 # seconds
-DISCOVERY_INTERVAL = 300 # 5 minutes
-EXECUTOR_INTERVAL = 15 # 15 seconds polling
-MONITORING_INTERVAL = 60 # 60 seconds
+
+# Fetch polling intervals from environment variables (with defaults)
+HEARTBEAT_INTERVAL = int(os.environ.get("AGENT_HEARTBEAT_INTERVAL", 30))
+DISCOVERY_INTERVAL = int(os.environ.get("AGENT_DISCOVERY_INTERVAL", 300))
+EXECUTOR_INTERVAL = int(os.environ.get("AGENT_EXECUTOR_INTERVAL", 15))
+MONITORING_INTERVAL = int(os.environ.get("AGENT_MONITORING_INTERVAL", 60))
 
 def get_system_info():
     """Gathers basic system metrics to send to the server."""
