@@ -65,6 +65,8 @@ def update_task_status(
         task.output_log = task_in.output_log
     if task_in.execution_history:
         task.execution_history = task_in.execution_history
+    if task_in.telemetry_data:
+        task.telemetry_data = task_in.telemetry_data
     task.updated_at = datetime.utcnow()
     
     db.add(task)

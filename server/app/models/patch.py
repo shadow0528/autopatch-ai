@@ -15,3 +15,4 @@ class PatchTask(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     output_log = Column(String, nullable=True)
     execution_history = Column(String, nullable=True) # JSON store of historical execution attempts/rollbacks
+    telemetry_data = Column(String, nullable=True) # JSON store of granular system state during patch execution

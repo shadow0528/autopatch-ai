@@ -14,6 +14,7 @@ class PatchTaskUpdate(BaseModel):
     status: str
     output_log: Optional[str] = None
     execution_history: Optional[str] = None
+    telemetry_data: Optional[str] = None
 
 class PatchTaskInDBBase(PatchTaskBase):
     id: int
@@ -22,6 +23,7 @@ class PatchTaskInDBBase(PatchTaskBase):
     updated_at: Optional[datetime] = None
     output_log: Optional[str] = None
     execution_history: Optional[str] = None
+    telemetry_data: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

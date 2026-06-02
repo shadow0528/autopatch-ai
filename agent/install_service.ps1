@@ -33,13 +33,17 @@ if (-not (Test-Path -Path $ExecutablePath)) {
     
     # Check for pyinstaller
     if (Get-Command pyinstaller -ErrorAction SilentlyContinue) {
-        pyinstaller --onefile --noconsole main.py -n autopatch-ai-agent
+        Write-Host "PyInstaller found. Freezing Python source into a standalone Windows Executable..."
+        # Add hidden imports if necessary, ensure icon/version info added for Enterprise look
+        pyinstaller --onefile --noconsole --name "autopatch-ai-agent" --clean --noupx main.py
+        
         if (Test-Path "dist\autopatch-ai-agent.exe") {
+            Write-Host "Compilation complete. Staging binary to Enterprise execution directory: $InstallPath"
             New-Item -ItemType Directory -Force -Path $InstallPath | Out-Null
             Copy-Item "dist\autopatch-ai-agent.exe" -Destination $ExecutablePath -Force
             Write-Host "Compiled and staged successfully."
         } else {
-            Write-Error "Compilation failed."
+            Write-Error "Compilation failed. Ensure your python environment is clean."
             exit 1
         }
     } else {

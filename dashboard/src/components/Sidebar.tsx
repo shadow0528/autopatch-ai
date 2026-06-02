@@ -4,12 +4,14 @@ export default function Sidebar() {
   const links = [
     { name: 'Dashboard Overview', href: '/' },
     { name: 'Agent Fleet Status', href: '/agent-status' },
+    { name: 'Discovery Overview', href: '/discovery' },
     { name: 'Asset Inventory', href: '/assets' },
     { name: 'Vulnerability Radar', href: '/vulnerabilities' },
     { name: 'Patch Orchestration', href: '/patch-queue' },
     { name: 'Reboot Approvals', href: '/reboot-queue' },
     { name: 'Threat Intel', href: '/threat-alerts' },
     { name: 'System Health', href: '/system-health' },
+    { name: 'Agent Health', href: '/agent-health' },
     { name: 'Audit Logs', href: '/logs' },
   ];
 

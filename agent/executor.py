@@ -186,9 +186,25 @@ def fetch_and_execute_tasks(hostname: str, server_url: str):
                 
                 # Storing minimal execution history string
                 import json
+                import psutil
+                
                 history_json = json.dumps([{"timestamp": time.time(), "status": final_status}])
                 
-                requests.put(update_url, json={"status": final_status, "output_log": result['output'], "execution_history": history_json}, timeout=5)
+                # Granular remediation telemetry payload capturing exact system state around execution
+                telemetry_payload = json.dumps({
+                   "pre_patch_cpu": psutil.cpu_percent(interval=None),
+                   "pre_patch_mem": psutil.virtual_memory().percent,
+                   "target_payload": task['payload'],
+                   "execution_environment": "AutoPatch_Agent_v1.0.0"
+                })
+                
+                update_data = {
+                    "status": final_status, 
+                    "output_log": result['output'], 
+                    "execution_history": history_json,
+                    "telemetry_data": telemetry_payload
+                }
+                requests.put(update_url, json=update_data, timeout=5)
                 
     except requests.exceptions.Timeout:
         logger.warning(f"Timeout fetching tasks from server: {poll_url}")
