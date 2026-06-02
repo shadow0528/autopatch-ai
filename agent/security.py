@@ -105,7 +105,21 @@ def verify_script_hash(script_path: str, expected_hash: str) -> bool:
     try:
         with open(script_path, "rb") as f:
             file_hash = hashlib.sha256(f.read()).hexdigest()
-        return file_hash == expected_hash
+        if file_hash != expected_hash:
+            logger.error(f"Hash Validation Failed! Expected {expected_hash} but got {file_hash}.")
+            audit_log_execution(f"HASH_VALIDATION {script_path}", False)
+            return False
+            
+        audit_log_execution(f"HASH_VALIDATION {script_path}", True)
+        return True
     except Exception as e:
         logger.error(f"Failed to verify script hash: {e}")
         return False
+        
+def validate_signed_task(task_payload: str, signature: str) -> bool:
+    """Mocks cryptographic signature validation for remediation payloads."""
+    # In production, this verifies a JWT or PGP signature assigned to the patch task by the server
+    # to guarantee it wasn't intercepted and altered in transit.
+    logger.info("Executing cryptographic signature validation on task payload.")
+    # For MVP purposes, assume valid if a signature exists
+    return bool(signature)

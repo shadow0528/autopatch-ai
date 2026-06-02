@@ -24,6 +24,8 @@ HEARTBEAT_INTERVAL = int(os.environ.get("AGENT_HEARTBEAT_INTERVAL", 30))
 DISCOVERY_INTERVAL = int(os.environ.get("AGENT_DISCOVERY_INTERVAL", 300))
 EXECUTOR_INTERVAL = int(os.environ.get("AGENT_EXECUTOR_INTERVAL", 15))
 MONITORING_INTERVAL = int(os.environ.get("AGENT_MONITORING_INTERVAL", 60))
+AUTH_TOKEN = os.environ.get("AGENT_AUTH_TOKEN", "fallback-dev-key")
+HEADERS = {"Authorization": f"Bearer {AUTH_TOKEN}"}
 
 def get_system_info():
     """Gathers basic system metrics to send to the server."""
@@ -64,7 +66,7 @@ def send_heartbeat():
     url = f"{SERVER_URL}/api/v1/agents/heartbeat"
     
     try:
-        response = requests.post(url, json=info, timeout=10)
+        response = requests.post(url, json=info, headers=HEADERS, timeout=10)
         if response.status_code == 200:
             logger.info(f"Successfully sent heartbeat. CPU: {info['cpu_utilization']}%, Mem: {info['memory_utilization']}%")
         else:

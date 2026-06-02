@@ -6,6 +6,7 @@ from datetime import datetime
 from app.db.session import get_db
 from app.models import agent as models
 from app.schemas import agent as schemas
+from app.core.security import get_api_key
 
 router = APIRouter()
 
@@ -14,6 +15,7 @@ def heartbeat(
     *,
     db: Session = Depends(get_db),
     agent_in: schemas.AgentCreate,
+    api_key: str = Depends(get_api_key),
 ) -> Any:
     """
     Agent heartbeat. Registers new agent or updates existing one.

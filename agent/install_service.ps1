@@ -72,11 +72,15 @@ if ($LASTEXITCODE -ne 0) {
 # 4. Set Description
 sc.exe description $ServiceName $ServiceDescription
 
-# 5. Start the service
+# 5. Configure Automatic Recovery (Restart on Failure)
+Write-Host "Configuring Service Recovery Actions..."
+sc.exe failure $ServiceName reset= 86400 actions= restart/60000/restart/60000/restart/60000
+
+# 6. Start the service
 Write-Host "Starting Service..."
 Start-Service -Name $ServiceName
 
-# 6. Verify Service Status
+# 7. Verify Service Status
 $FinalStatus = Get-Service -Name $ServiceName
 if ($FinalStatus.Status -eq 'Running') {
     Write-Host "AutoPatch AI Agent successfully installed and is now RUNNING." -ForegroundColor Green

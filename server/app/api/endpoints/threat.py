@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models import threat as models
 from app.schemas import threat as schemas
+from app.core.security import get_api_key
 import logging
 
 logger = logging.getLogger("AutoPatchAPI.Threats")
@@ -24,6 +25,7 @@ def report_threat_alert(
     *,
     db: Session = Depends(get_db),
     alert_in: schemas.ThreatAlertCreate,
+    api_key: str = Depends(get_api_key),
 ) -> Any:
     """Agent reports a new threat anomaly with compromise scoring correlation."""
     

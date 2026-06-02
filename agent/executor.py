@@ -93,6 +93,8 @@ def execute_windows_update(kb_number: str) -> dict:
 
 def handle_reboots(hostname: str, server_url: str):
     """Poll the backend API for approved reboot requests and execute post-reboot validation."""
+    auth_token = os.environ.get("AGENT_AUTH_TOKEN", "fallback-dev-key")
+    headers = {"Authorization": f"Bearer {auth_token}"}
     try:
         res = requests.get(f"{server_url}/api/v1/reboots/", timeout=10)
         if res.status_code == 200:
@@ -113,7 +115,7 @@ def handle_reboots(hostname: str, server_url: str):
                     
                     # Mark request as executing to prevent double-reboots by agent overlap
                     update_url = f"{server_url}/api/v1/reboots/{rb['id']}"
-                    requests.put(update_url, json={"status": "Executing"}, timeout=5)
+                    requests.put(update_url, json={"status": "Executing"}, headers=headers, timeout=5)
                     
                     logger.info(f"Reboot request #{rb['id']} executing. Validating post-reboot state...")
                     
@@ -137,7 +139,7 @@ def handle_reboots(hostname: str, server_url: str):
                     time.sleep(2)
                     
                     update_url = f"{server_url}/api/v1/reboots/{rb['id']}"
-                    requests.put(update_url, json=validation_payload, timeout=5)
+                    requests.put(update_url, json=validation_payload, headers=headers, timeout=5)
                     logger.info(f"Reboot request #{rb['id']} validated and marked completed.")
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching reboots from server: {e}")
@@ -152,9 +154,12 @@ def fetch_and_execute_tasks(hostname: str, server_url: str):
     """Poll the backend API for pending tasks assigned to this agent and execute them."""
     handle_reboots(hostname, server_url)
     
+    auth_token = os.environ.get("AGENT_AUTH_TOKEN", "fallback-dev-key")
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    
     poll_url = f"{server_url}/api/v1/patches/agent/{hostname}"
     try:
-        res = requests.get(poll_url, timeout=10)
+        res = requests.get(poll_url, headers=headers, timeout=10)
         if res.status_code == 200:
             tasks = res.json()
             for task in tasks:
@@ -163,7 +168,7 @@ def fetch_and_execute_tasks(hostname: str, server_url: str):
                 
                 # Report task as running
                 update_url = f"{server_url}/api/v1/patches/{task_id}"
-                requests.put(update_url, json={"status": "Running"}, timeout=5)
+                requests.put(update_url, json={"status": "Running"}, headers=headers, timeout=5)
                 
                 # Execute action based on type with self-healing retry logic
                 if task['patch_type'] == "PowerShell":
@@ -204,7 +209,7 @@ def fetch_and_execute_tasks(hostname: str, server_url: str):
                     "execution_history": history_json,
                     "telemetry_data": telemetry_payload
                 }
-                requests.put(update_url, json=update_data, timeout=5)
+                requests.put(update_url, json=update_data, headers=headers, timeout=5)
                 
     except requests.exceptions.Timeout:
         logger.warning(f"Timeout fetching tasks from server: {poll_url}")

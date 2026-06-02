@@ -6,6 +6,7 @@ from datetime import datetime
 from app.db.session import get_db
 from app.models import reboot as models
 from app.schemas import reboot as schemas
+from app.core.security import get_api_key
 
 router = APIRouter()
 
@@ -33,6 +34,7 @@ def update_reboot_status(
     db: Session = Depends(get_db),
     req_id: int,
     req_in: schemas.RebootRequestUpdate,
+    api_key: str = Depends(get_api_key),
 ) -> Any:
     """Agent endpoint to report reboot status and post-reboot validation metrics."""
     req = db.query(models.RebootRequest).filter(models.RebootRequest.id == req_id).first()
@@ -58,14 +60,16 @@ def update_reboot_status(
     db.refresh(req)
     return req
 
+from fastapi import Query
+
 @router.get("/", response_model=List[schemas.RebootRequest])
 def read_reboot_requests(
     db: Session = Depends(get_db),
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
 ) -> Any:
-    """Retrieve all reboot requests."""
-    return db.query(models.RebootRequest).offset(skip).limit(limit).all()
+    """Retrieve all reboot requests with pagination."""
+    return db.query(models.RebootRequest).order_by(models.RebootRequest.requested_at.desc()).offset(skip).limit(limit).all()
 
 @router.put("/{req_id}/approve", response_model=schemas.RebootRequest)
 def approve_reboot_request(

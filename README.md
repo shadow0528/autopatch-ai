@@ -15,30 +15,54 @@ Built for modern SOC/NOC environments, AutoPatch AI integrates seamless endpoint
 The platform operates via a polling architecture designed for low endpoint overhead and secure, one-way communication.
 
 ```text
-                  +-----------------------+
-                  |  SOC/NOC Dashboard    |
-                  |  (Next.js / React)    |
-                  +-----------+-----------+
-                              |
-                              v
-                  +-----------------------+
-                  |  Central Mother API   |
-                  |  (FastAPI / SQLite)   |
-                  +-----------+-----------+
-                              ^
-        [Polls for Tasks]     |    [Sends Heartbeats & Threats]
-                              |
-    +-------------------------+-------------------------+
-    |                         |                         |
-+---+---+                 +---+---+                 +---+---+
-| Agent |                 | Agent |                 | Agent |
-| Sub 1 |                 | Sub 2 |                 | Sub N |
-+---+---+                 +---+---+                 +---+---+
-    |                         |                         |
-[Scans /24]               [Scans /24]               [Scans /24]
-| (RDP/SMB)               |                         |
-+---> [Shadow Assets]     +---> [Shadow Assets]     +---> [Shadow Assets]
+                          +-----------------------+
+                          |  SOC/NOC Dashboard    |
+                          |  (Next.js / React)    |
+                          +-----------+-----------+
+                                      | (REST / JWT)
+                                      v
+                          +-----------------------+
+                          |  Central Mother API   |
+                          |  (FastAPI / SQLite)   |
+                          +-----------+-----------+
+                                      ^
+         [Polls for Signed Tasks]     |    [Sends Heartbeats & Forensic JSON]
+                                      |
+            +-------------------------+-------------------------+
+            |                         |                         |
+        +---+---+                 +---+---+                 +---+---+
+        | Agent |                 | Agent |                 | Agent |
+        | Sub 1 |                 | Sub 2 |                 | Sub N |
+        +---+---+                 +---+---+                 +---+---+
+            |                         |                         |
+ [Scans /24]|              [Scans /24]|              [Scans /24]|
+ +----------+              +----------+              +----------+
+ | (RDP/SMB)|              |          |              |          |
+ v          |              v          |              v          |
+[Shadow Assets]           [Shadow Assets]           [Shadow Assets]
 ```
+
+### Reboot Orchestration Workflow
+
+```text
+[Patch Installs] --> [Reboot Required Flag Detected] --> [Reboot Queued]
+                                                             |
+   +---------------------------------------------------------+
+   |
+   v
+[SOC Admin Approves] --> [Agent Checks Time-Window] --> [Executes Restart]
+                                                             |
+   +---------------------------------------------------------+
+   |
+   v
+[Agent Reconnects] --> [Validates Patch State] --> [Reports "Completed"]
+```
+
+### Secure Execution Sandbox
+AutoPatch AI enforces strict restrictions on endpoint remediation:
+1. **Command Whitelist:** Only specific binaries (`winget`, `sfc`, `Get-WindowsUpdate`) are passed to the shell.
+2. **Directory Sandbox:** Scripts (`.ps1`) only run if present within predefined enterprise locations (e.g., `C:\Program Files\AutoPatchAI\Scripts\`).
+3. **Execution Provenance:** Cryptographic hash validation occurs automatically on all remote scripts, locking out `Invoke-Expression`, web-downloads, and encoded memory exploits.
 
 ### Core Components
 1. **Central "Mother" Server**: A FastAPI/SQLAlchemy REST backend that orchestrates tasks, collects endpoint metrics, and maintains the centralized SQLite (or Postgres) inventory.
@@ -77,7 +101,15 @@ The platform operates via a polling architecture designed for low endpoint overh
 * Node.js v18+ & npm
 * Windows OS (for Agent Endpoint deployment)
 
-### 1. Unified Installation Workflow
+### 1. Database Migrations (Alembic)
+If this is a fresh setup or pulling a recent update, execute the Alembic schema migrations natively:
+```bash
+cd server
+alembic upgrade head
+cd ..
+```
+
+### 2. Unified Installation Workflow
 A `deploy.sh` script is bundled to rapidly install and configure the necessary python virtual environments and Next.js frontend requirements.
 
 ```bash
