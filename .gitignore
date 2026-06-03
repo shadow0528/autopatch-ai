@@ -2,3 +2,6 @@ __pycache__/
 *.db
 venv/
 .env
+agent-build-env/
+dist/
+build/
