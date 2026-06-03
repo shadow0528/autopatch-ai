@@ -1,84 +1,163 @@
-# AutoPatch AI Agent
+# 🔥 AutoPatch AI Agent
 
-This is an R&D lab project that aims to become a working MVP for a fully on-prem autonomous vulnerability remediation and patch orchestration platform.
+**Autonomous Vulnerability Remediation & Endpoint Orchestration Platform**
 
-## Features (Phase 1)
-- Backend skeleton
-- Database models
-- Agent registration
-- Heartbeat
-- Dashboard basics (Next.js)
+AutoPatch AI Agent is a fully on-premise, lightweight, and scalable endpoint orchestration platform designed to automate vulnerability remediation, coordinate managed reboots, and detect suspicious threat anomalies across thousands of Windows assets. 
 
-## How to run locally
+It provides an enterprise-grade experience unifying SOC/NOC telemetry, active orchestration workflows, and an immutable secure-execution agent.
 
-### 1. Backend Server Setup
-To run the server, ensure you have Python 3.9+ installed.
+Built for modern SOC/NOC environments, AutoPatch AI integrates seamless endpoint discovery with actionable patch deployments to drastically reduce mean time to remediation (MTTR) while keeping operations strictly isolated from cloud dependencies.
 
-1. Navigate to the `server` directory:
-   ```bash
-   cd server
-   ```
+---
 
-2. Create a virtual environment (optional but recommended):
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
+## 🏗️ Architecture
 
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+The platform operates via a polling architecture designed for low endpoint overhead and secure, one-way communication.
 
-4. Run the FastAPI server:
-   ```bash
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-   ```
-
-5. Access the API documentation:
-   Open a browser and navigate to `http://localhost:8000/docs` to see the Swagger UI.
-
-### 2. Testing the APIs (Phase 1)
-
-**Heartbeat / Registration API**
-```bash
-curl -X 'POST' \
-  'http://localhost:8000/api/v1/agents/heartbeat' \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "hostname": "win-server-01",
-  "ip_address": "192.168.1.100",
-  "cpu_utilization": 15.5,
-  "memory_utilization": 45.2,
-  "agent_version": "1.0.0"
-}'
+```text
+                          +-----------------------+
+                          |  SOC/NOC Dashboard    |
+                          |  (Next.js / React)    |
+                          +-----------+-----------+
+                                      | (REST / JWT)
+                                      v
+                          +-----------------------+
+                          |  Central Mother API   |
+                          |  (FastAPI / SQLite)   |
+                          +-----------+-----------+
+                                      ^
+         [Polls for Signed Tasks]     |    [Sends Heartbeats & Forensic JSON]
+                                      |
+            +-------------------------+-------------------------+
+            |                         |                         |
+        +---+---+                 +---+---+                 +---+---+
+        | Agent |                 | Agent |                 | Agent |
+        | Sub 1 |                 | Sub 2 |                 | Sub N |
+        +---+---+                 +---+---+                 +---+---+
+            |                         |                         |
+ [Scans /24]|              [Scans /24]|              [Scans /24]|
+ +----------+              +----------+              +----------+
+ | (RDP/SMB)|              |          |              |          |
+ v          |              v          |              v          |
+[Shadow Assets]           [Shadow Assets]           [Shadow Assets]
 ```
 
-**List Agents**
-```bash
-curl -X 'GET' \
-  'http://localhost:8000/api/v1/agents/' \
-  -H 'accept: application/json'
+### Reboot Orchestration Workflow
+
+```text
+[Patch Installs] --> [Reboot Required Flag Detected] --> [Reboot Queued]
+                                                             |
+   +---------------------------------------------------------+
+   |
+   v
+[SOC Admin Approves] --> [Agent Checks Time-Window] --> [Executes Restart]
+                                                             |
+   +---------------------------------------------------------+
+   |
+   v
+[Agent Reconnects] --> [Validates Patch State] --> [Reports "Completed"]
 ```
 
-### 3. Dashboard Server Setup
-To run the dashboard, ensure you have Node.js and npm installed.
+### Secure Execution Sandbox
+AutoPatch AI enforces strict restrictions on endpoint remediation:
+1. **Command Whitelist:** Only specific binaries (`winget`, `sfc`, `Get-WindowsUpdate`) are passed to the shell.
+2. **Directory Sandbox:** Scripts (`.ps1`) only run if present within predefined enterprise locations (e.g., `C:\Program Files\AutoPatchAI\Scripts\`).
+3. **Execution Provenance:** Cryptographic hash validation occurs automatically on all remote scripts, locking out `Invoke-Expression`, web-downloads, and encoded memory exploits.
 
-1. Navigate to the `dashboard` directory:
-   ```bash
-   cd dashboard
-   ```
+### Core Components
+1. **Central "Mother" Server**: A FastAPI/SQLAlchemy REST backend that orchestrates tasks, collects endpoint metrics, and maintains the centralized SQLite (or Postgres) inventory.
+2. **Next.js Dashboard**: A dark-mode, cybersecurity-styled React web application featuring analytical charts, queue management, and real-time operational visibility.
+3. **Lightweight Python Agent**: An endpoint-deployed polling client containing modular threads for heartbeat transmission, async subnet discovery, Powershell patch execution, and threat monitoring.
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+---
 
-3. Run the Next.js development server:
-   ```bash
-   npm run dev
-   ```
+## ✨ Features
 
-4. Access the dashboard:
-   Open a browser and navigate to `http://localhost:3000`. Ensure your backend server is running on port 8000.
+* **Subnet-Aware Host Discovery**: Asynchronous socket scanning on RDP (3389) and SMB (445) ports to detect shadow/unmanaged assets automatically.
+* **Qualys CSV Integration**: Ingests bulk vulnerability assessments to track QIDs, severity, and remediation requirements globally.
+* **Patch Orchestration Engine**: Securely executes `Install-WindowsUpdate`, `winget` upgrades, or approved PowerShell remediation scripts.
+* **Controlled Reboot Approvals**: Separates patch installation from system reboots, enforcing administrative approval for single, batch, or entire subnet reboots with post-validation checks.
+* **Failure Intelligence & Self-Healing**: Captures structured failure logs and automatically initiates diagnostic service restarts or `DISM`/`sfc` corruption repairs before retrying.
+* **Threat Awareness Engine**: Continuously monitors endpoint CPU/Memory utilization and scans for unauthorized/malicious process executions (e.g. `mimikatz`), triggering instant alerts.
+* **Strict Security Execution Model**: Employs immutable audit logging and a rigid command whitelist to block arbitrary remote execution or encoded PowerShell payloads.
+
+---
+
+## 📸 Dashboard Preview
+
+*(Add screenshots here)*
+* **Dashboard Overview**: `[Placeholder: dashboard_overview.png]`
+* **Asset Inventory**: `[Placeholder: asset_inventory.png]`
+* **Patch Orchestration Queue**: `[Placeholder: patch_queue.png]`
+* **Reboot Approvals**: `[Placeholder: reboot_approvals.png]`
+* **Threat Anomalies**: `[Placeholder: threat_alerts.png]`
+
+---
+
+## 🚀 Deployment Guide
+
+### Prerequisites
+* Python 3.9+
+* Node.js v18+ & npm
+* Windows OS (for Agent Endpoint deployment)
+
+### 1. Database Migrations (Alembic)
+If this is a fresh setup or pulling a recent update, execute the Alembic schema migrations natively:
+```bash
+cd server
+alembic upgrade head
+cd ..
+```
+
+### 2. Unified Installation Workflow
+A `deploy.sh` script is bundled to rapidly install and configure the necessary python virtual environments and Next.js frontend requirements.
+
+```bash
+chmod +x deploy.sh
+./deploy.sh
+```
+
+### 2. Service Execution
+Once the installation script completes, utilize the local start script to boot the Master Server, local test Agent, and the Dashboard concurrently:
+
+```bash
+chmod +x startup.sh
+./startup.sh
+```
+
+Access the dashboard at: `http://localhost:3000`
+
+### 3. Agent Execution (Standalone Endpoints)
+For enterprise rollout, the endpoint agents should be deployed using Windows Services. See the included Powershell helper in `agent/install_service.ps1` for instructions on packaging `main.py` via PyInstaller and wrapping it with `sc.exe` or `NSSM`.
+
+---
+
+## 🤖 AI & Future Enhancements Roadmap
+
+We are actively evolving this orchestration tool into a full AI-driven cognitive system. The future roadmap includes:
+
+- [ ] **LLM-Driven Diagnostic Triage**: Integrates local LLM models (e.g. Llama 3) directly into the `self_heal.py` agent to interpret arbitrary Windows exit codes on the fly and dynamically synthesize safe remediation plans without strict pre-programmed paths.
+- [ ] **Heuristic Threat Correlation**: Incorporates machine learning to assign Bayesian probabilistic compromise scores rather than static anomaly triggers in the `monitoring.py` loops.
+- [ ] **Active Directory Integration**: Sync managed endpoints directly with AD OUs.
+- [ ] **PostgreSQL Migration**: Upgrade backend from SQLite to distributed Postgres for enterprise scale.
+- [ ] **Role-Based Access Control (RBAC)**: Distinct permissions for NOC Operators vs SOC Analysts.
+- [ ] **Full EDR Hooks**: Enhance the Threat Awareness engine with ETW (Event Tracing for Windows) logs.
+
+### Troubleshooting
+
+**Problem: Agent tasks are stuck in "Pending" state.**
+* **Solution**: Verify the `AGENT_EXECUTOR_INTERVAL` variable is correctly exported in `.env` and that the agent's target hostname correctly aligns with the orchestration backend registry.
+
+**Problem: Agent execution is blocked for legitimate PowerShell tasks.**
+* **Solution**: Check the `security_audit.log` file on the endpoint. If your script uses aliases like `iex`, it will be blocked natively. Ensure your scripts are mapped within the `TRUSTED_SCRIPT_REGISTRY` dict in `agent/security.py`.
+
+---
+
+## 🤝 Contributing
+Contributions are welcome! Please ensure any submitted code aligns with the strict security whitelist execution models and utilizes asynchronous patterns where applicable.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request

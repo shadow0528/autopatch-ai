@@ -6,6 +6,8 @@ interface Agent {
   id: number;
   hostname: string;
   ip_address: string;
+  subnet: string | null;
+  os_version: string | null;
   cpu_utilization: number;
   memory_utilization: number;
   agent_version: string;
@@ -45,6 +47,8 @@ async function AssetsTable() {
             <th className="px-6 py-4">ID</th>
             <th className="px-6 py-4">Hostname</th>
             <th className="px-6 py-4">IP Address</th>
+            <th className="px-6 py-4">Subnet</th>
+            <th className="px-6 py-4">OS Version</th>
             <th className="px-6 py-4">Agent Ver.</th>
             <th className="px-6 py-4">Status</th>
             <th className="px-6 py-4">Actions</th>
@@ -56,6 +60,8 @@ async function AssetsTable() {
               <td className="px-6 py-4 text-gray-500">#{agent.id}</td>
               <td className="px-6 py-4 font-medium text-white">{agent.hostname}</td>
               <td className="px-6 py-4 text-gray-400">{agent.ip_address}</td>
+              <td className="px-6 py-4 text-gray-400">{agent.subnet || 'Unknown'}</td>
+              <td className="px-6 py-4 text-gray-400 truncate max-w-[150px]" title={agent.os_version || 'Unknown'}>{agent.os_version || 'Unknown'}</td>
               <td className="px-6 py-4 text-gray-400">{agent.agent_version}</td>
               <td className="px-6 py-4">
                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
@@ -78,15 +84,21 @@ async function AssetsTable() {
 
 export default function AssetsPage() {
   return (
-    <div className="space-y-6">
-      <header className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold tracking-tight">Asset Inventory</h2>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors">
-          Export CSV
-        </button>
+    <div className="space-y-8 max-w-[1600px] mx-auto">
+      <header className="flex justify-between items-end mb-10 pb-4 border-b border-gray-800/50">
+        <div>
+          <h2 className="text-4xl font-light tracking-tight text-white mb-1">Asset Inventory Engine</h2>
+          <p className="text-gray-400 text-sm">Comprehensive registry of all managed endpoints across active subnets.</p>
+        </div>
+        <div className="flex space-x-3">
+          <input type="text" placeholder="Search Hostname..." className="bg-gray-900 border border-gray-700 text-white text-sm rounded-lg px-4 py-2 focus:ring-blue-500 focus:border-blue-500" />
+          <button className="bg-blue-600/90 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold tracking-wider uppercase transition-colors shadow-lg">
+            Export Report
+          </button>
+        </div>
       </header>
       
-      <Suspense fallback={<div className="text-gray-500 p-4">Loading asset inventory...</div>}>
+      <Suspense fallback={<div className="text-gray-500 p-4 animate-pulse">Scanning registry database...</div>}>
         <AssetsTable />
       </Suspense>
     </div>

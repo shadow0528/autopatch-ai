@@ -6,6 +6,7 @@ from datetime import datetime
 from app.db.session import get_db
 from app.models import agent as models
 from app.schemas import agent as schemas
+from app.core.security import get_api_key
 
 router = APIRouter()
 
@@ -14,6 +15,7 @@ def heartbeat(
     *,
     db: Session = Depends(get_db),
     agent_in: schemas.AgentCreate,
+    api_key: str = Depends(get_api_key),
 ) -> Any:
     """
     Agent heartbeat. Registers new agent or updates existing one.
@@ -25,6 +27,8 @@ def heartbeat(
         agent.ip_address = agent_in.ip_address
         agent.cpu_utilization = agent_in.cpu_utilization
         agent.memory_utilization = agent_in.memory_utilization
+        agent.os_version = agent_in.os_version
+        agent.subnet = agent_in.subnet
         agent.agent_version = agent_in.agent_version
         agent.last_seen = datetime.utcnow()
         agent.status = "online"
@@ -40,6 +44,8 @@ def heartbeat(
         ip_address=agent_in.ip_address,
         cpu_utilization=agent_in.cpu_utilization,
         memory_utilization=agent_in.memory_utilization,
+        os_version=agent_in.os_version,
+        subnet=agent_in.subnet,
         agent_version=agent_in.agent_version,
         status="online"
     )

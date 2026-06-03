@@ -18,10 +18,14 @@ logger = logging.getLogger("AutoPatchAgent")
 # Server Configuration
 SERVER_URL = os.environ.get("AUTOPATCH_SERVER_URL", "http://127.0.0.1:8000")
 AGENT_VERSION = "1.0.0"
-HEARTBEAT_INTERVAL = 30 # seconds
-DISCOVERY_INTERVAL = 300 # 5 minutes
-EXECUTOR_INTERVAL = 15 # 15 seconds polling
-MONITORING_INTERVAL = 60 # 60 seconds
+
+# Fetch polling intervals from environment variables (with defaults)
+HEARTBEAT_INTERVAL = int(os.environ.get("AGENT_HEARTBEAT_INTERVAL", 30))
+DISCOVERY_INTERVAL = int(os.environ.get("AGENT_DISCOVERY_INTERVAL", 300))
+EXECUTOR_INTERVAL = int(os.environ.get("AGENT_EXECUTOR_INTERVAL", 15))
+MONITORING_INTERVAL = int(os.environ.get("AGENT_MONITORING_INTERVAL", 60))
+AUTH_TOKEN = os.environ.get("AGENT_AUTH_TOKEN", "fallback-dev-key")
+HEADERS = {"Authorization": f"Bearer {AUTH_TOKEN}"}
 
 def get_system_info():
     """Gathers basic system metrics to send to the server."""
@@ -40,15 +44,19 @@ def get_system_info():
     memory_info = psutil.virtual_memory()
     memory_utilization = memory_info.percent
     
-    # Note: Backend does not accept os_version right now based on our schema.
-    # We will log it here but omit it from the heartbeat payload.
     os_version = f"{platform.system()} {platform.release()}"
+    
+    # Calculate a mock subnet based on IP
+    parts = ip_address.split('.')
+    subnet = f"{parts[0]}.{parts[1]}.{parts[2]}.0/24" if len(parts) == 4 else "192.168.1.0/24"
     
     return {
         "hostname": hostname,
         "ip_address": ip_address,
         "cpu_utilization": cpu_utilization,
         "memory_utilization": memory_utilization,
+        "os_version": os_version,
+        "subnet": subnet,
         "agent_version": AGENT_VERSION
     }
 
@@ -58,7 +66,7 @@ def send_heartbeat():
     url = f"{SERVER_URL}/api/v1/agents/heartbeat"
     
     try:
-        response = requests.post(url, json=info, timeout=10)
+        response = requests.post(url, json=info, headers=HEADERS, timeout=10)
         if response.status_code == 200:
             logger.info(f"Successfully sent heartbeat. CPU: {info['cpu_utilization']}%, Mem: {info['memory_utilization']}%")
         else:
