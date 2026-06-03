@@ -3,18 +3,18 @@
     Installs the AutoPatch AI Agent as a persistent Windows Background Service.
 
 .DESCRIPTION
-    This script will register the compiled AutoPatch AI Agent (autopatch-ai-agent.exe) 
-    using NSSM (Non-Sucking Service Manager) or sc.exe to ensure it starts automatically 
-    on boot and runs as the local SYSTEM account.
+    This script will install a PRE-COMPILED AutoPatch AI Agent (autopatch-ai-agent.exe)
+    using sc.exe to ensure it starts automatically on boot and runs as the local SYSTEM account.
+    This script does NOT require Python or PyInstaller on the endpoint.
 
 .NOTES
-    Before running this script, you must compile the agent into a single executable:
-    > pip install pyinstaller
-    > pyinstaller --onefile --noconsole main.py
-    
-    Then place the resulting `main.exe` (renamed to `autopatch-ai-agent.exe`) 
-    into C:\Program Files\AutoPatchAI\.
+    Before running this script, ensure `autopatch-ai-agent.exe` is placed in the same
+    directory as this script, or explicitly provide its path.
 #>
+
+param (
+    [string]$SourceExe = ".\autopatch-ai-agent.exe"
+)
 
 $ServiceName = "AutoPatchAIAgent"
 $ServiceDisplayName = "AutoPatch AI Orchestration Agent"
@@ -26,30 +26,11 @@ Write-Host "=========================================================="
 Write-Host "🔥 AutoPatch AI Agent - Production Installer Wizard"
 Write-Host "=========================================================="
 
-# 1. Verify Executable Exists
-if (-not (Test-Path -Path $ExecutablePath)) {
-    Write-Warning "Executable not found at $ExecutablePath."
-    Write-Host "Attempting to compile source via PyInstaller..."
-    
-    # Check for pyinstaller
-    if (Get-Command pyinstaller -ErrorAction SilentlyContinue) {
-        Write-Host "PyInstaller found. Freezing Python source into a standalone Windows Executable..."
-        # Add hidden imports if necessary, ensure icon/version info added for Enterprise look
-        pyinstaller --onefile --noconsole --name "autopatch-ai-agent" --clean --noupx main.py
-        
-        if (Test-Path "dist\autopatch-ai-agent.exe") {
-            Write-Host "Compilation complete. Staging binary to Enterprise execution directory: $InstallPath"
-            New-Item -ItemType Directory -Force -Path $InstallPath | Out-Null
-            Copy-Item "dist\autopatch-ai-agent.exe" -Destination $ExecutablePath -Force
-            Write-Host "Compiled and staged successfully."
-        } else {
-            Write-Error "Compilation failed. Ensure your python environment is clean."
-            exit 1
-        }
-    } else {
-         Write-Error "PyInstaller not found. Please install Python and run 'pip install pyinstaller' or place the precompiled binary manually."
-         exit 1
-    }
+# 1. Verify Source Executable Exists
+if (-not (Test-Path -Path $SourceExe)) {
+    Write-Error "Source executable not found at '$SourceExe'."
+    Write-Error "This endpoint installer requires the pre-compiled binary. Please place 'autopatch-ai-agent.exe' in the same folder as this script and run it again."
+    Exit 1
 }
 
 # 2. Stop and remove existing service if it exists
@@ -61,26 +42,34 @@ if ($ExistingService) {
     Start-Sleep -Seconds 2
 }
 
-# 3. Create the new service
+# 3. Copy Executable to Target Directory
+Write-Host "Staging binary to Enterprise execution directory: $InstallPath"
+if (-not (Test-Path -Path $InstallPath)) {
+    New-Item -ItemType Directory -Force -Path $InstallPath | Out-Null
+}
+Copy-Item -Path $SourceExe -Destination $ExecutablePath -Force
+
+# 4. Create the new service
 Write-Host "Creating Windows Service: $ServiceName..."
-$createResult = sc.exe create $ServiceName binPath= "`"$ExecutablePath`"" start= auto DisplayName= $ServiceDisplayName
+# sc.exe syntax requires exact spacing around =
+$createResult = sc.exe create $ServiceName binPath= "`"$ExecutablePath`"" start= auto DisplayName= "`"$ServiceDisplayName`""
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Failed to create service. Ensure you are running as Administrator."
-    exit 1
+    Exit 1
 }
 
-# 4. Set Description
-sc.exe description $ServiceName $ServiceDescription
+# 5. Set Description
+sc.exe description $ServiceName "`"$ServiceDescription`""
 
-# 5. Configure Automatic Recovery (Restart on Failure)
+# 6. Configure Automatic Recovery (Restart on Failure)
 Write-Host "Configuring Service Recovery Actions..."
 sc.exe failure $ServiceName reset= 86400 actions= restart/60000/restart/60000/restart/60000
 
-# 6. Start the service
+# 7. Start the service
 Write-Host "Starting Service..."
 Start-Service -Name $ServiceName
 
-# 7. Verify Service Status
+# 8. Verify Service Status
 $FinalStatus = Get-Service -Name $ServiceName
 if ($FinalStatus.Status -eq 'Running') {
     Write-Host "AutoPatch AI Agent successfully installed and is now RUNNING." -ForegroundColor Green

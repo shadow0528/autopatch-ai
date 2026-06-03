@@ -127,8 +127,18 @@ chmod +x startup.sh
 
 Access the dashboard at: `http://localhost:3000`
 
-### 3. Agent Execution (Standalone Endpoints)
-For enterprise rollout, the endpoint agents should be deployed using Windows Services. See the included Powershell helper in `agent/install_service.ps1` for instructions on packaging `main.py` via PyInstaller and wrapping it with `sc.exe` or `NSSM`.
+### 3. Mass Agent Deployment (3000+ Endpoints)
+For enterprise rollout, endpoints **do not** require Python. You compile the agent once and distribute the binary using tools like SCCM, Intune, or GPO.
+
+**Step A: Compile the Agent (Run ONCE on Admin/Build PC)**
+1. On a machine with Python 3.10+ installed, open an Administrator PowerShell.
+2. Navigate to `agent/` and run `.\build_windows_exe.ps1`.
+3. This creates a standalone `autopatch-ai-agent.exe` inside the `agent/dist/` folder.
+
+**Step B: Deploy to Endpoints (Run on Target Assets)**
+1. Distribute the generated `autopatch-ai-agent.exe` and `install_service.ps1` to your endpoint.
+2. Run `.\install_service.ps1` as Administrator.
+3. The script will copy the `.exe` to `C:\Program Files\AutoPatchAI\` and register it as a resilient Windows Background Service.
 
 ---
 
